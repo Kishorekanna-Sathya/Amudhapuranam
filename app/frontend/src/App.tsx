@@ -342,7 +342,7 @@ export default function App() {
           <div className="intro-book-window">
             <button className="intro-close" onClick={() => setView("graph")} title="Go to Graph">×</button>
             <div className="intro-left">
-              <img src="/author.png" alt="Author" className="intro-author-photo" />
+              <img src={`${import.meta.env.BASE_URL}author.png`} alt="Author" className="intro-author-photo" />
             </div>
             <div className="intro-right">
               <div className="intro-text-scroll">
