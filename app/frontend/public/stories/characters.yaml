@@ -1,0 +1,59 @@
+characters:
+  - id: amudhan
+    name: Amudhan
+    role: Protagonist
+    color: "#f5d233"
+    description: |
+      Protagonist of the story.
+    chapters:
+      - vet_kar
+      - va_ni_si
+      - va_varu
+      - valli
+
+  - id: vasu
+    name: Vasu
+    role: Friend
+    color: "#6ce4e2"
+    description: |
+      Protagonist's Friend.
+    chapters:
+      - vet_kar
+      - valli
+
+  - id: ezhil
+    name: Ezhilan
+    role: Savior
+    color: "#e87fcc"
+    description: |
+      Pilot Aspirant. 
+    chapters:
+      - va_varu
+
+  - id: raghavi
+    name: Raghavi
+    role: 
+    color: "#e87fcc"
+    description: |
+      Ezhilan's Girl Friend.
+    chapters:
+      - va_varu
+
+  - id: jeya
+    name: Jeyanthi
+    role: 
+    color: "#6ce4e2"
+    description: |
+      Vasu's Sister.
+    chapters:
+      - vet_kar
+      - valli
+
+  - id: valli
+    name: Valli
+    role: 
+    color: "#008000"
+    description: |
+      Amudhan's Love Interest.
+    chapters:
+      - valli

@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+    container_name: story-frontend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

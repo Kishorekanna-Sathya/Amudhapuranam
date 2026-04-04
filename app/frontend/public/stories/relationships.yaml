@@ -1,0 +1,36 @@
+relationships:
+  - id: r1
+    source: amudhan
+    target: vasu
+    type: friend
+    label: Friends
+
+  - id: r2
+    source: vasu
+    target: jeya
+    type: family
+    label: Siblings
+
+  - id: r3
+    source: jeya
+    target: valli
+    type: friend
+    label: Friends
+
+  - id: r4
+    source: ezhil
+    target: raghavi
+    type: Alliance
+    label: Love
+
+  - id: r5
+    source: amudhan
+    target: valli
+    type: Alliance
+    label: Love Interest
+
+  - id: r6
+    source: amudhan
+    target: ezhil
+    type: Conflict
+    label: Butterfly Effect

@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMUDHA PURANAM — Interactive Neighbourhood Amudhan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Noto+Serif+Tamil:wght@300;400;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Fuse.js/7.0.0/fuse.min.js"></script>
+  <style>
+    /* ── DESIGN TOKENS ─────────────────────────────────── */
+    :root {
+      --bg: #070b14;
+      --surface: #0d1526;
+      --surface2: #111e33;
+      --border: #1c2d48;
+      --border2: #263d5e;
+      --gold: #c9a84c;
+      --gold2: #e8c96a;
+      --red: #c94040;
+      --blue: #5e9cc9;
+      --text: #d0c6b4;
+      --text2: #7a7060;
+      --text3: #3d3628;
+      --modal-bg: rgba(6, 9, 18, 0.96);
+      --r-family: #5e9cc9;
+      --r-alliance: #c9a84c;
+      --r-conflict: #c94040;
+    }
+
+    /* ── RESET ──────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 24px;
+      height: 58px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 200;
+    }
+
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 3px;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+
+    .logo small {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: var(--text2);
+      font-weight: 400;
+    }
+
+    .logo-sep {
+      width: 1px;
+      height: 30px;
+      background: var(--border2);
+      flex-shrink: 0;
+    }
+
+    .story-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    .story-title span {
+      color: var(--gold);
+    }
+
+    /* ── SEARCH ─────────────────────────────────────────── */
+    .search-wrap {
+      flex: 1;
+      max-width: 380px;
+      position: relative;
+      margin-left: 8px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text2);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 7px 14px 7px 34px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    #search-input::placeholder {
+      color: var(--text2);
+    }
+
+    #search-input:focus {
+      border-color: var(--gold);
+    }
+
+    #search-results {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 300;
+      display: none;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .7);
+    }
+
+    #search-results.open {
+      display: block;
+    }
+
+    .sr-group-label {
+      padding: 8px 14px 4px;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sr-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    .sr-item:hover {
+      background: var(--surface);
+    }
+
+    .sr-item:last-child {
+      border-bottom: none;
+    }
+
+    .sr-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .sr-badge.character {
+      background: var(--border2);
+      color: var(--gold);
+    }
+
+    .sr-badge.chapter {
+      background: rgba(201, 168, 76, .12);
+      color: var(--gold2);
+    }
+
+    .sr-name {
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    /* ── VIEW CONTROLS ──────────────────────────────────── */
+    .view-controls {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .btn.active {
+      background: var(--gold);
+      color: var(--bg);
+      border-color: var(--gold);
+    }
+
+    .btn.edit-on {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    /* ── MAIN AREA ──────────────────────────────────────── */
+    #main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── GRAPH VIEW ─────────────────────────────────────── */
+    #graph-view {
+      position: absolute;
+      inset: 0;
+    }
+
+    #graph-svg {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      display: block;
+    }
+
+    #graph-svg:active {
+      cursor: grabbing;
+    }
+
+    /* ── TOOLTIP ─────────────────────────────────────────── */
+    #tooltip {
+      position: absolute;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      min-width: 230px;
+      max-width: 290px;
+      pointer-events: none;
+      z-index: 150;
+      opacity: 0;
+      transition: opacity .15s;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .65);
+    }
+
+    #tooltip.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .tt-header {
+      padding: 13px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tt-name {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .tt-house {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .tt-desc {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .tt-body {
+      padding: 11px 16px 14px;
+    }
+
+    .tt-chapters-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .chapter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chapter-tag {
+      padding: 5px 10px;
+      background: rgba(201, 168, 76, .08);
+      border: 1px solid rgba(201, 168, 76, .25);
+      border-radius: 3px;
+      font-size: 13px;
+      color: var(--gold2);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Noto Serif Tamil', serif;
+      line-height: 1.3;
+    }
+
+    .chapter-tag:hover {
+      background: rgba(201, 168, 76, .22);
+      border-color: var(--gold);
+      color: var(--gold2);
+    }
+
+    .tt-hint {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* ── FLOATING PANELS ─────────────────────────────────── */
+    .float-panel {
+      position: absolute;
+      background: rgba(13, 21, 38, .9);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 12px 16px;
+      z-index: 50;
+      backdrop-filter: blur(6px);
+    }
+
+    .fp-title {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: var(--text3);
+      margin-bottom: 9px;
+    }
+
+    #legend {
+      bottom: 20px;
+      left: 20px;
+    }
+
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .leg-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .leg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .leg-name {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    #rel-legend {
+      bottom: 20px;
+      left: 172px;
+    }
+
+    .rel-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .rel-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .rel-seg {
+      width: 24px;
+      height: 2px;
+    }
+
+    #instructions {
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .inst-item {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+
+    .inst-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .inst-key {
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* ── TIMELINE VIEW ──────────────────────────────────── */
+    #timeline-view {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding: 44px 60px;
+      display: none;
+    }
+
+    .tl-header {
+      margin-bottom: 42px;
+    }
+
+    .tl-main-title {
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      color: var(--gold);
+      letter-spacing: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tl-sub {
+      color: var(--text2);
+      font-size: 15px;
+    }
+
+    .tl-track {
+      position: relative;
+      padding-left: 56px;
+      max-width: 820px;
+    }
+
+    .tl-rail {
+      position: absolute;
+      left: 22px;
+      top: 6px;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--border2) 8%, var(--border2) 92%, transparent);
+    }
+
+    .tl-item {
+      position: relative;
+      margin-bottom: 36px;
+      cursor: pointer;
+    }
+
+    .tl-dot {
+      position: absolute;
+      left: -42px;
+      top: 7px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      background: var(--bg);
+      transition: background .2s, box-shadow .2s;
+    }
+
+    .tl-item:hover .tl-dot {
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+    }
+
+    .tl-num {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+
+    .tl-title {
+      font-family: 'Noto Serif Tamil', serif;
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 3px;
+      transition: color .2s;
+    }
+
+    .tl-item:hover .tl-title {
+      color: var(--gold);
+    }
+
+    .tl-title-en {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 9px;
+      letter-spacing: .5px;
+    }
+
+    .tl-chars {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tl-char {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: .5px;
+      padding: 3px 9px;
+      border-radius: 2px;
+    }
+
+    /* ── CHAPTER MODAL ──────────────────────────────────── */
+    #chapter-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--modal-bg);
+      z-index: 400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    #chapter-modal.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      max-width: 740px;
+      width: 100%;
+      max-height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .85);
+      animation: modalIn .25s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      color: var(--text2);
+      font-size: 26px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color .15s;
+      z-index: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--gold);
+    }
+
+    .modal-hdr {
+      padding: 28px 36px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal-num {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-family: 'Noto Serif Tamil', serif;
+      font-size: 28px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .modal-chars {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 13px;
+    }
+
+    .modal-char {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      padding: 3px 11px;
+      border-radius: 2px;
+      letter-spacing: .5px;
+    }
+
+    .modal-body {
+      padding: 34px 36px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-text {
+      font-family: 'Noto Serif Tamil', serif;
+      font-size: 18px;
+      line-height: 2;
+      color: var(--text);
+      white-space: pre-line;
+    }
+
+    /* ── EDIT PANEL ─────────────────────────────────────── */
+    #edit-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 330px;
+      background: var(--surface);
+      border-left: 1px solid var(--border2);
+      z-index: 100;
+      overflow-y: auto;
+      padding: 22px;
+      display: none;
+      animation: slideIn .2s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    #edit-panel.open {
+      display: block;
+    }
+
+    .ep-title {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
+
+    .ep-placeholder {
+      color: var(--text2);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .ep-field {
+      margin-bottom: 14px;
+    }
+
+    .ep-label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: var(--text3);
+      margin-bottom: 5px;
+    }
+
+    .ep-input,
+    .ep-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 11px;
+      border-radius: 3px;
+      outline: none;
+      font-family: 'Crimson Pro', serif;
+      font-size: 14px;
+      transition: border-color .15s;
+    }
+
+    .ep-input:focus,
+    .ep-textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .ep-textarea {
+      font-family: 'Noto Serif Tamil', serif;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .ep-save {
+      width: 100%;
+      padding: 9px;
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      border-radius: 3px;
+      margin-top: 4px;
+      transition: background .15s;
+    }
+
+    .ep-save:hover {
+      background: var(--gold2);
+    }
+
+    .ep-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin: 18px 0 12px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ep-chapter-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* ── NOTIFICATION ───────────────────────────────────── */
+    #notif {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface2);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 9px 22px;
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      z-index: 500;
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+    }
+
+    #notif.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── SCROLLBAR ──────────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold);
+    }
+
+    /* ── KEYBOARD SHORTCUT HINT ─────────────────────────── */
+    #kb-hint {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text3);
+    }
+
+    #kb-hint span {
+      color: var(--border2);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  HEADER                                            -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <header>
+    <div class="logo">
+      AMUDHA PURANAM
+      <small>Neighbourhood Amudhan</small>
+    </div>
+    <div class="logo-sep"></div>
+    <div class="story-title">GAME OF THRONES · <span>வெஸ்டெரோஸ் கதை</span></div>
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search characters, chapters, Tamil keywords…">
+      <div id="search-results"></div>
+    </div>
+
+    <div class="view-controls">
+      <button class="btn active" id="btn-graph" onclick="switchView('graph')">⬡ GRAPH</button>
+      <button class="btn" id="btn-timeline" onclick="switchView('timeline')">◈ TIMELINE</button>
+      <button class="btn" id="btn-edit" onclick="toggleEdit()">✎ EDIT</button>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  MAIN                                              -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div id="main">
+
+    <!-- Graph view -->
+    <div id="graph-view">
+      <svg id="graph-svg"></svg>
+
+      <!-- Hover tooltip -->
+      <div id="tooltip"></div>
+
+      <!-- Legend: Houses -->
+      <div class="float-panel" id="legend">
+        <div class="fp-title">HOUSES</div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background:#5e9cc9"></div><span class="leg-name">House Stark</span>
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background:#c94040"></div><span class="leg-name">House Targaryen</span>
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background:#d4a843"></div><span class="leg-name">House Lannister</span>
+        </div>
+      </div>
+
+      <!-- Legend: Relationships -->
+      <div class="float-panel" id="rel-legend">
+        <div class="fp-title">RELATIONSHIPS</div>
+        <div class="rel-line">
+          <div class="rel-seg" style="background:#5e9cc9"></div><span class="leg-name">Family</span>
+        </div>
+        <div class="rel-line">
+          <div class="rel-seg" style="background:#d4a843"></div><span class="leg-name">Alliance</span>
+        </div>
+        <div class="rel-line">
+          <div class="rel-seg"
+            style="background:#c94040; background: repeating-linear-gradient(90deg,#c94040 0,#c94040 4px,transparent 4px,transparent 8px)">
+          </div><span class="leg-name">Conflict</span>
+        </div>
+      </div>
+
+      <!-- How-to instructions -->
+      <div class="float-panel" id="instructions">
+        <div class="fp-title">EXPLORE</div>
+        <div class="inst-item"><span class="inst-key">HOVER</span> node → see chapters</div>
+        <div class="inst-item"><span class="inst-key">CLICK</span> chapter tag → read it</div>
+        <div class="inst-item"><span class="inst-key">DRAG</span> nodes to rearrange</div>
+        <div class="inst-item"><span class="inst-key">SCROLL</span> to zoom</div>
+        <div class="inst-item"><span class="inst-key">/</span> to focus search &nbsp; <span class="inst-key">ESC</span>
+          to close</div>
+      </div>
+    </div>
+
+    <!-- Timeline view -->
+    <div id="timeline-view">
+      <div class="tl-header">
+        <div class="tl-main-title">STORY TIMELINE</div>
+        <div class="tl-sub">Events in chronological order · Click any chapter to read</div>
+      </div>
+      <div class="tl-track">
+        <div class="tl-rail"></div>
+        <div id="tl-items"></div>
+      </div>
+    </div>
+
+    <!-- Edit panel -->
+    <div id="edit-panel">
+      <div class="ep-title">✎ EDIT MODE</div>
+      <div id="ep-form">
+        <p class="ep-placeholder">Click on a character node in the graph to select and edit it.</p>
+      </div>
+    </div>
+
+  </div><!-- #main -->
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  CHAPTER MODAL                                     -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div id="chapter-modal">
+    <div class="modal-panel">
+      <button class="modal-close" onclick="closeModal()" title="Close (Esc)">×</button>
+      <div class="modal-hdr">
+        <div class="modal-num" id="m-num"></div>
+        <div class="modal-title" id="m-title"></div>
+        <div class="modal-chars" id="m-chars"></div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-text" id="m-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="notif"></div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!--  JAVASCRIPT                                        -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    // ─────────────────────────────────────────────────────────
+    //  STORY DATA (Game of Thrones demo — Tamil content)
+    // ─────────────────────────────────────────────────────────
+    const SOURCE_DATA = {
+
+      characters: [
+        {
+          id: 'jon', name: 'Jon Snow', house: 'Stark / Targaryen', houseKey: 'stark', color: '#5e9cc9',
+          description: 'Night\'s Watch Lord Commander. True heir to the Iron Throne.',
+          chapters: ['ch1', 'ch8']
+        },
+
+        {
+          id: 'daenerys', name: 'Daenerys Targaryen', house: 'Targaryen', houseKey: 'targaryen', color: '#c94040',
+          description: 'Mother of Dragons. Breaker of Chains. Rightful Queen.',
+          chapters: ['ch2', 'ch8']
+        },
+
+        {
+          id: 'tyrion', name: 'Tyrion Lannister', house: 'Lannister', houseKey: 'lannister', color: '#d4a843',
+          description: 'The Imp. Hand of the Queen. The cleverest Lannister.',
+          chapters: ['ch3']
+        },
+
+        {
+          id: 'cersei', name: 'Cersei Lannister', house: 'Lannister', houseKey: 'lannister', color: '#d4a843',
+          description: 'Queen of the Seven Kingdoms. Master of court intrigue.',
+          chapters: ['ch4']
+        },
+
+        {
+          id: 'arya', name: 'Arya Stark', house: 'Stark', houseKey: 'stark', color: '#5e9cc9',
+          description: 'No one. A girl with a list and a needle.',
+          chapters: ['ch5']
+        },
+
+        {
+          id: 'ned', name: 'Ned Stark', house: 'Stark', houseKey: 'stark', color: '#5e9cc9',
+          description: 'Lord of Winterfell. Warden of the North. Honourable to a fault.',
+          chapters: ['ch6']
+        },
+
+        {
+          id: 'jaime', name: 'Jaime Lannister', house: 'Lannister', houseKey: 'lannister', color: '#d4a843',
+          description: 'The Kingslayer. Once the greatest knight in Westeros.',
+          chapters: ['ch7']
+        },
+
+        {
+          id: 'sansa', name: 'Sansa Stark', house: 'Stark', houseKey: 'stark', color: '#5e9cc9',
+          description: 'Lady of Winterfell. From naive girl to astute ruler.',
+          chapters: ['ch9']
+        },
+
+        {
+          id: 'bran', name: 'Bran Stark', house: 'Stark', houseKey: 'stark', color: '#5e9cc9',
+          description: 'The Three-Eyed Raven. Sees across all of time.',
+          chapters: ['ch10']
+        }
+      ],
+
+      chapters: [
+        {
+          id: 'ch1', timeline: 1, titleEn: 'Guardian of the North',
+          title: 'வடக்கின் காவலன்', characters: ['jon', 'ned'],
+          content:
+            `ஜான் ஸ்னோ வின்டர்ஃபெல் கோட்டையில் வளர்ந்தான். தன்னை நெட் ஸ்டார்க்கின் மகனாக நம்பி வாழ்ந்தான். ஆனால் அவன் இதயத்தில் எப்போதும் ஒரு வலி இருந்தது — தன் தாயார் யார் என்று அவனுக்குத் தெரியவில்லை.
+
+குளிர்ந்த காற்று வீசிய ஒரு காலை வேளையில், நெட் ஸ்டார்க் தன் மகன்களுடன் வேட்டைக்கு சென்றான். காட்டில் ஒரு வூல்ஃப் கடாவைக் கண்டார்கள் — இறந்த தாயின் பக்கத்தில் ஐந்து குட்டிகள். அந்த குட்டிகளை பிள்ளைகள் எடுத்தனர். ஆனால் ஜானுக்கு? அவனுக்கும் ஒரு குட்டி கிடைத்தது — வெள்ளை நிறத்தில், சிவந்த கண்களுடன்.
+
+இரவுக் காவலர் படையில் சேர்ந்த பிறகு, ஜான் வடக்கின் குளிரான இரவுகளில் உண்மையான அன்பையும் கடமையையும் கற்றுக்கொண்டான். வைட் வாக்கர்களின் இருண்ட படை வரும் என்று அவனுக்கு மட்டுமே தெரிந்தது. ஆனால் யாரும் நம்பவில்லை.
+
+"குளிர் வருகிறது" — இது ஸ்டார்க் குலத்தின் வாக்கியம். ஆனால் அது எவ்வளவு உண்மையானது என்று ஜான் மட்டுமே சரியாக உணர்ந்தான்.`
+        },
+        {
+          id: 'ch2', timeline: 2, titleEn: 'Child of Fire',
+          title: 'தீயின் குழந்தை', characters: ['daenerys'],
+          content:
+            `டேனெரிஸ் டார்கேரியன் புயலில் பிறந்தாள். வீடும் இல்லை, நாடும் இல்லை என்று வாழ்ந்த அவள், தன் சகோதரன் விஸ்கரீஸின் கொடுமைகளை தாங்கி வந்தாள்.
+
+கஃல் த்ராக்கி தளபதி கால் த்ரோகோவை மணந்தபோது, அவளது உலகம் முற்றிலும் மாறியது. ஒரு அந்நியனிடம் கொடுக்கப்பட்ட அவள், மெல்ல மெல்ல அந்த கலாச்சாரத்தை புரிந்துகொண்டாள். வலிமையும் கருணையும் ஒரே நேரத்தில் கொண்டு ஆட்சி செய்யலாம் என்று கற்றுக்கொண்டாள்.
+
+மூன்று டிராகன் முட்டைகள் கால் த்ரோகோவின் இறுதி சடங்கில் நெருப்புக்கு இடப்பட்டன. டேனெரிஸும் அந்த நெருப்பில் நுழைந்தாள்.
+
+அடுத்த காலையில் சாம்பலிலிருந்து எழுந்தாள் — மூன்று சிறிய டிராகன்களுடன். நெருப்பு அவளை எரிக்கவில்லை. ஏனென்றால் அவளே நெருப்பின் மகள்.
+
+"டிராகன்கள் கட்டுப்படுவதில்லை. அவை விடுவிக்கப்படுகின்றன." — இது அவளது நம்பிக்கை.`
+        },
+        {
+          id: 'ch3', timeline: 3, titleEn: 'Wisdom of the Dwarf',
+          title: 'குள்ளனின் ஞானம்', characters: ['tyrion', 'cersei', 'jaime'],
+          content:
+            `டைரியன் லேனிஸ்டர் குள்ளனாகப் பிறந்தான். அவனது குடும்பம் அவனை வெறுத்தது, உலகம் அவனை ஏளனம் செய்தது.
+
+"நான் குடிக்கிறேன், மற்றும் நான் விஷயங்களை அறிகிறேன்" — இது அவனது வழிமொழி. புத்தகங்களும் மதுவும் அவனது உற்ற நண்பர்களாயின.
+
+கிங்ஸ் லேண்டிங்கில் ஹேண்ட் ஆஃப் த கிங்ஆக செயல்பட்டபோது, அவன் தனது புத்திசாலித்தனத்தால் மட்டுமே வாழ்ந்தான். பிளாக்வாட்டர் யுத்தத்தில் நகரை காப்பாற்றியவன் அவன். ஆனால் அதற்கான பாராட்டை மற்றவர்கள் பெற்றனர்.
+
+அவனது நாக்கு ஒரு வாளை விட கூர்மையானது. ஒரு சரியான வார்த்தை சொல்லி, அவன் எத்தனையோ போர்களை தடுத்திருக்கிறான்.
+
+"நான் எனது குடும்பத்தை நேசிக்கிறேன். அது என்னை வேட்டையாடும் துரதிருஷ்டம்."
+
+டேனெரிஸின் ஆலோசகனாக சேர்ந்தபோது, அவன் உண்மையில் ஒரு நல்ல உலகை கட்டி எழுப்ப நினைத்தான்.`
+        },
+        {
+          id: 'ch4', timeline: 4, titleEn: "The Queen's Plot",
+          title: 'ராணியின் சதி', characters: ['cersei', 'jaime', 'ned'],
+          content:
+            `செர்செய் லேனிஸ்டர் — அழகும் அதிகாரமும் ஒரே நேரத்தில் கொண்ட ஒரு பெண். அவளது கண்கள் எப்போதும் இரண்டு கணக்குப் போட்டுக்கொண்டே இருக்கும்.
+
+ராபர்ட் பாரத்தியனை மணந்தாள். ஆனால் அவளது இதயம் வேறொருவரிடம் இருந்தது — அவளது சகோதரன் ஜெய்மி லேனிஸ்டரிடம்.
+
+ஜோஃப்ரியை அரியணையில் வைக்க அவள் எந்த வகையான இரகசியத்தையும் செய்யத் துணிந்தாள். நெட் ஸ்டார்க் அந்த இரகசியத்தை கண்டுபிடித்தான். அவனை அழிக்க அவள் தயங்கவில்லை.
+
+"நீங்கள் வெற்றிபெறுகிறீர்கள் அல்லது இறக்கிறீர்கள். இடையில் வேறு வழியில்லை." — இது அவளது நம்பிக்கை.
+
+அரியணை படிகளில் அவளது அதிகார வாசம் கமழ்ந்தது. ஆனால் அதிகாரம் என்பது கையிலிருந்து மணல் போல் கழிந்துவிடும் என்று அவள் உணரவில்லை.`
+        },
+        {
+          id: 'ch5', timeline: 5, titleEn: 'The Face of Death',
+          title: 'மரணத்தின் முகம்', characters: ['arya', 'ned'],
+          content:
+            `ஆரியா ஸ்டார்க் ஒரு சாதாரண இளவரசி இல்லை. அவளது கையில் ஒரு சிறிய வாள் — "ஊசி" என்று பெயர் வைத்தாள். ஜான் ஸ்னோ அவளுக்கு பரிசளித்தது.
+
+தந்தையின் மரணம் அவளை உள்ளிருந்து உடைத்தது. கிங்ஸ் லேண்டிங்கின் செஃப்டாவுக்கு அருகே நின்று, தன் தந்தை தலை துண்டிக்கப்படுவதை பார்த்தாள். அந்த காட்சி அவளது இதயத்தில் என்றும் வாழும்.
+
+ஆனால் அந்த வலியை அவள் வலிமையாக மாற்றிக்கொண்டாள். பிரவோஸுக்கு சென்று, ஜாக்கன் ஹ்காரிடம் கொலைக்கலை கற்றுக்கொண்டாள்.
+
+"ஒரு பெண்ணுக்கு பெயர் இல்லை" என்று சொல்லப்பட்டாலும், அவளுக்கு ஒரு பட்டியல் இருந்தது — இறக்க வேண்டியவர்களின் பட்டியல். தினமும் இரவில் தூங்கும் முன், அவள் அந்த பெயர்களை மனதில் சொல்வாள்.
+
+இறுதியில், நைட் கிங்கை அவளே அழித்தாள். அந்த இரவு, வடக்கின் பனி உருகியது.`
+        },
+        {
+          id: 'ch6', timeline: 6, titleEn: 'The Burden of Duty',
+          title: 'கடமையின் சுமை', characters: ['ned', 'arya', 'sansa'],
+          content:
+            `நெட் ஸ்டார்க் கடமையை மதத்தை விட அதிகமாக நம்பினான். வின்டர்ஃபெல்லில் தன் குடும்பத்தோடு வாழ்வதே அவனது கனவு. ஆனால் விதி அவனை கிங்ஸ் லேண்டிங்கிற்கு அழைத்துச் சென்றது.
+
+"குளிர் வருகிறது" என்று அவன் எப்போதும் சொன்னான். ஆனால் அவனுக்குத் தெரியாமல் போனது — கிங்ஸ் லேண்டிங்கின் அரசியல் மிகவும் குளிரானது.
+
+ராஜாவின் ஹேண்டாக சேர்ந்த அவன், செர்செய்யின் இரகசியத்தை கண்டுபிடித்தான். நேர்மையான மனிதன் என்றாலும், அரசியலில் நேர்மை ஒரு பலவீனம்.
+
+அவன் உண்மையை ஒப்புக்கொண்டான் — குழந்தைகளை காப்பாற்றும் என்ற நம்பிக்கையில். ஆனால் ஜாஃப்ரி அவனை மன்னிக்கவில்லை.
+
+அவனது கடமை அவனுக்கே கல்லறை ஆனது. ஆனால் அவனது பெயர் என்றும் மரியாதையோடு நினைக்கப்படும்.`
+        },
+        {
+          id: 'ch7', timeline: 7, titleEn: 'Oath of the Golden Hand',
+          title: 'தங்கக் கையின் சபதம்', characters: ['jaime', 'cersei', 'ned'],
+          content:
+            `ஜெய்மி லேனிஸ்டர் — "கிங்ஸ்லேயர்" என்று அழைக்கப்படுகிறான். ஒரு காலத்தில் வெஸ்டெரோஸின் சிறந்த வீரன்.
+
+ஆரிஸ் டார்கேரியன் — பைத்தியமான ராஜா — கிங்ஸ் லேண்டிங்கையே நெருப்பில் எரிக்க திட்டமிட்டான். ஜெய்மி அவனை கொன்றான். ஒரே நொடியில் அவனது மரியாதை போனது.
+
+"சபதம் மீறியவன்" என்று எல்லோரும் சொன்னனர். ஆனால் அந்த சபதம் மீறியதால், ஒரு நகரம் காப்பாற்றப்பட்டது.
+
+பாக்ஸ்டாவில் ஒரு போரில் அவனது வலது கையை இழந்தான். அந்த கை — வாள் பிடித்த கை — போனது. அவன் முற்றிலும் உடைந்தான்.
+
+ஆனால் உடைந்த மனிதர்களும் மீண்டு வருவார்கள். ப்ரீன்னேயோடு பயணித்த நாட்கள் அவனை புது மனிதனாக்கின. கடமை என்பது தங்கக் கையில் மட்டும் இல்லை — இதயத்திலும் இருக்கும்.`
+        },
+        {
+          id: 'ch8', timeline: 8, titleEn: 'Two Fires',
+          title: 'இரண்டு நெருப்புகள்', characters: ['jon', 'daenerys'],
+          content:
+            `ஜான் ஸ்னோவும் டேனெரிஸ் டார்கேரியனும் சந்தித்தனர் — டிராகன்ஸ்டோன் கோட்டையில்.
+
+வடக்கின் பனிக்கட்டியும் தெற்கின் நெருப்பும் ஒரே இடத்தில் சந்தித்தால் என்ன ஆகும்? முதலில் இருவரும் தங்கள் வழியில் உறுதியாக இருந்தனர். ஜான் வைட் வாக்கர்களை பற்றி சொன்னான், டேனெரிஸ் அரியணையை பற்றி சொன்னாள்.
+
+மெல்ல மெல்ல நம்பிக்கை வந்தது. ஒன்றாக வெஸ்டெரோஸை காப்பாற்ற முடியும் என்று உணர்ந்தனர்.
+
+ஆனால் விதி என்பது கடினமானது. சாம் டார்லியிலிருந்து ஒரு இரகசியம் வெளியானது — ஜான் ஸ்னோ உண்மையில் எக்கோன் டார்கேரியன். டேனெரிஸின் மருமகன்.
+
+அந்த உண்மை இருவரையும் உடைத்தது. அரியணைக்கான உரிமை, காதல், கடமை — எல்லாம் சிக்கலாகியது.`
+        },
+        {
+          id: 'ch9', timeline: 9, titleEn: 'The Cold Scar',
+          title: 'குளிர்ந்த வடு', characters: ['sansa', 'ned', 'arya'],
+          content:
+            `சான்சா ஸ்டார்க் கனவுகளோடு வாழ்ந்தாள். அரசர்களும் இளவரசர்களும் அவளது கனவில் வந்தனர். கிங்ஸ் லேண்டிங்கில் உள்ள அழகான வாழ்க்கை அவளுக்கு மிகவும் பிடித்திருந்தது.
+
+ஆனால் உண்மை கடினமானது. ஜோஃப்ரியின் கொடுமையும், ரேம்சேயின் காட்டுத்தனமும் அவளை உடைக்க முயன்றன. எத்தனையோ நண்பர்கள் துரோகம் செய்தனர்.
+
+ஆனால் அவள் உடையவில்லை.
+
+லிட்டில்ஃபிங்கர் அவளுக்கு அரசியலை கற்றுக்கொடுத்தான். செர்செய் அவளுக்கு மிரட்டலை கற்றுக்கொடுத்தாள். ரேம்சே அவளுக்கு வலியை கற்றுக்கொடுத்தான். இந்த மூன்று பாடங்களும் சேர்ந்து, அவளை வின்டர்ஃபெல்லின் ஆட்சியாளராக மாற்றின.
+
+"பனி போல் கடினமாகி, பாறை போல் உறுதியாகி" — இது அவளது மாற்றம். வடக்கின் ராணி என்ற பட்டம் அவளுக்கு நியாயமானது.`
+        },
+        {
+          id: 'ch10', timeline: 10, titleEn: 'All Eyes',
+          title: 'எல்லாக் கண்களும்', characters: ['bran', 'ned'],
+          content:
+            `பிரான் ஸ்டார்க் கோபுரத்திலிருந்து விழுந்தான். ஜெய்மி லேனிஸ்டர் அவனை தள்ளினான். அவனது கால்கள் இயங்காமல் போயின.
+
+ஆனால் அந்த விழுகை ஒரு விழிப்புணர்வையும் கொண்டு வந்தது.
+
+கிரீன்சீர் திறமை அவனில் விழித்துக்கொண்டது. கடந்த காலத்தையும் நிகழ்காலத்தையும் ஒரே நேரத்தில் பார்க்கும் சக்தி. காகங்களின் கண்களால் உலகெங்கும் பார்க்கலாம்.
+
+மூன்று கண்கொண்ட காக்கையை சந்திக்க வடக்கிற்கு சென்றான். அங்கே, சீர் என்ற பழைய மனிதரிடம் இருந்து எல்லாவற்றையும் கற்றுக்கொண்டான்.
+
+"நான் பிரான் இல்லை. நான் மூன்று கண்கொண்ட காக்கை." — இது அவனது மாற்றம்.
+
+கடந்த காலம் மாறாது. நிகழ்காலம் உருமாறும். எதிர்காலம் மட்டுமே திறந்திருக்கும் — யாரோ ஒருவர் சரியான தேர்வு செய்யும்வரை.`
+        }
+      ],
+
+      relationships: [
+        { id: 'r1', source: 'jon', target: 'ned', type: 'family', label: 'Father & Son' },
+        { id: 'r2', source: 'jon', target: 'arya', type: 'family', label: 'Siblings' },
+        { id: 'r3', source: 'jon', target: 'sansa', type: 'family', label: 'Siblings' },
+        { id: 'r4', source: 'jon', target: 'bran', type: 'family', label: 'Siblings' },
+        { id: 'r5', source: 'jon', target: 'daenerys', type: 'alliance', label: 'Alliance & Love' },
+        { id: 'r6', source: 'tyrion', target: 'cersei', type: 'family', label: 'Siblings' },
+        { id: 'r7', source: 'tyrion', target: 'jaime', type: 'family', label: 'Siblings' },
+        { id: 'r8', source: 'cersei', target: 'jaime', type: 'family', label: 'Siblings' },
+        { id: 'r9', source: 'arya', target: 'ned', type: 'family', label: 'Daughter & Father' },
+        { id: 'r10', source: 'sansa', target: 'ned', type: 'family', label: 'Daughter & Father' },
+        { id: 'r11', source: 'bran', target: 'ned', type: 'family', label: 'Son & Father' },
+        { id: 'r12', source: 'bran', target: 'sansa', type: 'family', label: 'Siblings' },
+        { id: 'r13', source: 'arya', target: 'sansa', type: 'family', label: 'Sisters' },
+        { id: 'r14', source: 'ned', target: 'cersei', type: 'conflict', label: 'Enemies' },
+        { id: 'r15', source: 'ned', target: 'jaime', type: 'conflict', label: 'Rivals' },
+        { id: 'r16', source: 'tyrion', target: 'daenerys', type: 'alliance', label: 'Advisor' }
+      ]
+    };
+
+
+    // ─────────────────────────────────────────────────────────
+    //  APP STATE
+    // ─────────────────────────────────────────────────────────
+    let state = {
+      view: 'graph',
+      editMode: false,
+      selectedCharId: null,
+      data: JSON.parse(JSON.stringify(SOURCE_DATA))   // mutable copy
+    };
+
+    // Helpers
+    const byId = (id) => document.getElementById(id);
+    const getChar = (id) => state.data.characters.find(c => c.id === id);
+    const getChap = (id) => state.data.chapters.find(c => c.id === id);
+
+    // Toast
+    function notify(msg) {
+      const el = byId('notif');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    //  SEARCH  (Fuse.js)
+    // ─────────────────────────────────────────────────────────
+    let fuse;
+
+    function initFuse() {
+      const items = [
+        ...state.data.characters.map(c => ({
+          type: 'character', id: c.id,
+          name: c.name,
+          text: [c.description, c.house].join(' ')
+        })),
+        ...state.data.chapters.map(ch => ({
+          type: 'chapter', id: ch.id,
+          name: ch.title + ' — ' + ch.titleEn,
+          text: ch.content
+        }))
+      ];
+      fuse = new Fuse(items, {
+        keys: [{ name: 'name', weight: .6 }, { name: 'text', weight: .4 }],
+        threshold: .4, includeScore: true
+      });
+    }
+
+    const $searchInput = byId('search-input');
+    const $searchResults = byId('search-results');
+
+    $searchInput.addEventListener('input', function () {
+      const q = this.value.trim();
+      if (!q) {
+        $searchResults.classList.remove('open');
+        $searchResults.innerHTML = '';
+        highlightNodes(null);
+        return;
+      }
+      const hits = fuse.search(q).slice(0, 10);
+      if (!hits.length) {
+        $searchResults.innerHTML = '<div style="padding:12px 14px;color:var(--text2);font-size:14px">No results found</div>';
+        $searchResults.classList.add('open');
+        return;
+      }
+
+      const chars = hits.filter(h => h.item.type === 'character');
+      const chapters = hits.filter(h => h.item.type === 'chapter');
+
+      let html = '';
+      if (chars.length) html += `<div class="sr-group-label">CHARACTERS</div>` + chars.map(renderHit).join('');
+      if (chapters.length) html += `<div class="sr-group-label">CHAPTERS</div>` + chapters.map(renderHit).join('');
+      $searchResults.innerHTML = html;
+      $searchResults.classList.add('open');
+
+      // Dim non-matching nodes in graph
+      const matchChars = chars.map(h => h.item.id);
+      const chapChars = chapters.flatMap(h => {
+        const ch = getChap(h.item.id);
+        return ch ? ch.characters : [];
+      });
+      highlightNodes([...new Set([...matchChars, ...chapChars])]);
+    });
+
+    function renderHit(h) {
+      return `<div class="sr-item" onclick="handleHit('${h.item.type}','${h.item.id}')">
+    <span class="sr-badge ${h.item.type}">${h.item.type}</span>
+    <span class="sr-name">${h.item.name}</span>
+  </div>`;
+    }
+
+    function handleHit(type, id) {
+      $searchResults.classList.remove('open');
+      $searchInput.value = '';
+      highlightNodes(null);
+      if (type === 'character') {
+        if (state.view !== 'graph') switchView('graph');
+        setTimeout(() => centerOnNode(id), 50);
+      } else {
+        openModal(id);
+      }
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrap')) $searchResults.classList.remove('open');
+    });
+
+
+    // ─────────────────────────────────────────────────────────
+    //  VIEW SWITCHING
+    // ─────────────────────────────────────────────────────────
+    function switchView(v) {
+      state.view = v;
+      byId('graph-view').style.display = v === 'graph' ? 'block' : 'none';
+      byId('timeline-view').style.display = v === 'timeline' ? 'block' : 'none';
+      byId('btn-graph').classList.toggle('active', v === 'graph');
+      byId('btn-timeline').classList.toggle('active', v === 'timeline');
+      if (v === 'timeline') renderTimeline();
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    //  CHAPTER MODAL
+    // ─────────────────────────────────────────────────────────
+    function openModal(chId) {
+      const ch = getChap(chId);
+      if (!ch) return;
+      const chars = ch.characters.map(getChar).filter(Boolean);
+
+      byId('m-num').textContent = `CHAPTER ${ch.timeline} · ${ch.titleEn.toUpperCase()}`;
+      byId('m-title').textContent = ch.title;
+      byId('m-text').textContent = ch.content;
+      byId('m-chars').innerHTML = chars.map(c =>
+        `<span class="modal-char" style="background:${c.color}1a;border:1px solid ${c.color}55;color:${c.color}">${c.name}</span>`
+      ).join('');
+
+      byId('chapter-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      byId('chapter-modal').classList.remove('open');
+    }
+
+    byId('chapter-modal').addEventListener('click', e => {
+      if (e.target === byId('chapter-modal')) closeModal();
+    });
+
+
+    // ─────────────────────────────────────────────────────────
+    //  TIMELINE VIEW
+    // ─────────────────────────────────────────────────────────
+    function renderTimeline() {
+      const sorted = [...state.data.chapters].sort((a, b) => a.timeline - b.timeline);
+      byId('tl-items').innerHTML = sorted.map(ch => {
+        const chars = ch.characters.map(getChar).filter(Boolean);
+        return `
+      <div class="tl-item" onclick="openModal('${ch.id}')">
+        <div class="tl-dot"></div>
+        <div class="tl-num">EVENT ${ch.timeline}</div>
+        <div class="tl-title">${ch.title}</div>
+        <div class="tl-title-en">${ch.titleEn}</div>
+        <div class="tl-chars">${chars.map(c =>
+          `<span class="tl-char" style="background:${c.color}1a;border:1px solid ${c.color}44;color:${c.color}">${c.name}</span>`
+        ).join('')}</div>
+      </div>`;
+      }).join('');
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    //  EDIT MODE
+    // ─────────────────────────────────────────────────────────
+    function toggleEdit() {
+      state.editMode = !state.editMode;
+      byId('btn-edit').classList.toggle('edit-on', state.editMode);
+      byId('edit-panel').classList.toggle('open', state.editMode);
+      if (!state.editMode) {
+        state.selectedCharId = null;
+        byId('ep-form').innerHTML = '<p class="ep-placeholder">Click on a character node in the graph to select and edit it.</p>';
+      }
+      notify(state.editMode ? 'Edit mode ON — click a node to edit' : 'Edit mode OFF');
+    }
+
+    function showEditForm(charId) {
+      const ch = getChar(charId);
+      if (!ch) return;
+      state.selectedCharId = charId;
+      const chapObjs = ch.chapters.map(getChap).filter(Boolean);
+
+      byId('ep-form').innerHTML = `
+    <div class="ep-field">
+      <label class="ep-label">CHARACTER NAME</label>
+      <input class="ep-input" id="ep-name" value="${ch.name}">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label">HOUSE</label>
+      <input class="ep-input" id="ep-house" value="${ch.house}">
+    </div>
+    <div class="ep-field">
+      <label class="ep-label">DESCRIPTION</label>
+      <textarea class="ep-textarea" id="ep-desc" style="font-family:'Crimson Pro',serif;font-size:14px">${ch.description}</textarea>
+    </div>
+    <button class="ep-save" onclick="saveChar()">SAVE CHARACTER</button>
+
+    <div class="ep-section-title">CHAPTERS</div>
+    ${chapObjs.map(c => `
+      <div class="ep-chapter-block">
+        <div class="ep-field">
+          <label class="ep-label">${c.titleEn} — TITLE (Tamil)</label>
+          <input class="ep-input" id="ep-cht-${c.id}" value="${c.title}" style="font-family:'Noto Serif Tamil',serif">
+        </div>
+        <div class="ep-field">
+          <label class="ep-label">CONTENT (Tamil)</label>
+          <textarea class="ep-textarea" id="ep-chc-${c.id}">${c.content}</textarea>
+        </div>
+        <button class="ep-save" onclick="saveChap('${c.id}')">SAVE CHAPTER</button>
+      </div>
+    `).join('')}
+  `;
+    }
+
+    function saveChar() {
+      const ch = getChar(state.selectedCharId);
+      if (!ch) return;
+      ch.name = byId('ep-name').value;
+      ch.house = byId('ep-house').value;
+      ch.description = byId('ep-desc').value;
+      notify('Character saved!');
+      // Rebuild graph labels
+      d3.selectAll('g.node').each(function (d) {
+        if (d.id === state.selectedCharId) {
+          d3.select(this).selectAll('text').filter((_, i, nodes) => d3.select(nodes[i]).attr('data-role') === 'name')
+            .text(ch.name.split(' ')[0].toUpperCase());
+        }
+      });
+      initFuse();
+    }
+
+    function saveChap(cid) {
+      const c = getChap(cid);
+      if (!c) return;
+      c.title = byId(`ep-cht-${cid}`).value;
+      c.content = byId(`ep-chc-${cid}`).value;
+      notify('Chapter saved!');
+      initFuse();
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    //  D3  FORCE GRAPH
+    // ─────────────────────────────────────────────────────────
+    let simulation, svgSel, zoomG, zoomBeh;
+    let $nodes, $links, $linkLabels;
+
+    const REL_COLORS = { family: '#5e9cc9', alliance: '#c9a84c', conflict: '#c94040' };
+
+    function initGraph() {
+      const container = byId('graph-view');
+      const W = container.clientWidth;
+      const H = container.clientHeight;
+
+      d3.select('#graph-svg').selectAll('*').remove();
+
+      svgSel = d3.select('#graph-svg');
+      const defs = svgSel.append('defs');
+
+      // ── Arrow markers ──
+      Object.entries(REL_COLORS).forEach(([type, col]) => {
+        defs.append('marker')
+          .attr('id', 'arr-' + type)
+          .attr('viewBox', '0 -5 10 10')
+          .attr('refX', 50).attr('refY', 0)
+          .attr('markerWidth', 6).attr('markerHeight', 6)
+          .attr('orient', 'auto')
+          .append('path')
+          .attr('d', 'M0,-5L10,0L0,5')
+          .attr('fill', col).attr('opacity', .55);
+      });
+
+      // ── Glow filter ──
+      const glow = defs.append('filter').attr('id', 'glow');
+      glow.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'blur');
+      const merge = glow.append('feMerge');
+      merge.append('feMergeNode').attr('in', 'blur');
+      merge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+      // ── Grid pattern ──
+      const grid = defs.append('pattern')
+        .attr('id', 'grid-pat').attr('width', 44).attr('height', 44)
+        .attr('patternUnits', 'userSpaceOnUse');
+      grid.append('path')
+        .attr('d', 'M44 0L0 0 0 44').attr('fill', 'none')
+        .attr('stroke', '#14203a').attr('stroke-width', .6);
+
+      // ── Zoom ──
+      zoomBeh = d3.zoom().scaleExtent([.25, 3.5])
+        .on('zoom', ev => zoomG.attr('transform', ev.transform));
+      svgSel.call(zoomBeh);
+
+      // ── Background ──
+      svgSel.append('rect').attr('width', '100%').attr('height', '100%')
+        .attr('fill', 'url(#grid-pat)');
+
+      zoomG = svgSel.append('g');
+
+      // ── Data clones ──
+      const nodes = state.data.characters.map(c => ({
+        ...c,
+        x: W / 2 + (Math.random() - .5) * 400,
+        y: H / 2 + (Math.random() - .5) * 300
+      }));
+      const links = state.data.relationships.map(r => ({ ...r }));
+
+      // ── Simulation ──
+      simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(190).strength(.25))
+        .force('charge', d3.forceManyBody().strength(-550))
+        .force('center', d3.forceCenter(W / 2, H / 2))
+        .force('collision', d3.forceCollide(62));
+
+      // ── Links ──
+      const linkG = zoomG.append('g');
+      $links = linkG.selectAll('line').data(links).enter().append('line')
+        .attr('stroke', d => REL_COLORS[d.type] || '#334')
+        .attr('stroke-opacity', .45)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', d => d.type === 'conflict' ? '6,4' : null)
+        .attr('marker-end', d => `url(#arr-${d.type})`);
+
+      // ── Link labels ──
+      const lblG = zoomG.append('g');
+      $linkLabels = lblG.selectAll('text').data(links).enter().append('text')
+        .attr('fill', '#2e4060')
+        .attr('font-size', '10px')
+        .attr('font-family', 'Cinzel, serif')
+        .attr('text-anchor', 'middle')
+        .attr('letter-spacing', '.5px')
+        .style('pointer-events', 'none')
+        .text(d => d.label);
+
+      // ── Node groups ──
+      const nodeG = zoomG.append('g');
+      $nodes = nodeG.selectAll('g.node').data(nodes).enter().append('g')
+        .attr('class', 'node')
+        .style('cursor', 'pointer')
+        .call(d3.drag()
+          .on('start', (ev, d) => { if (!ev.active) simulation.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; })
+          .on('drag', (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
+          .on('end', (ev, d) => { if (!ev.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+        );
+
+      // Pulse ring (hover glow)
+      $nodes.append('circle')
+        .attr('r', 46).attr('fill', 'none')
+        .attr('stroke', d => d.color).attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 0).attr('filter', 'url(#glow)')
+        .attr('class', 'node-ring');
+
+      // Main body circle
+      $nodes.append('circle')
+        .attr('r', 34)
+        .attr('fill', d => d.color + '1a')
+        .attr('stroke', d => d.color)
+        .attr('stroke-width', 2)
+        .attr('class', 'node-circle');
+
+      // Initials
+      $nodes.append('text')
+        .attr('text-anchor', 'middle').attr('dy', '.35em')
+        .attr('fill', d => d.color)
+        .attr('font-family', 'Cinzel, serif')
+        .attr('font-size', '15px').attr('font-weight', '700')
+        .style('pointer-events', 'none')
+        .text(d => d.name.split(' ').map(w => w[0]).join('').slice(0, 2));
+
+      // First name label
+      $nodes.append('text')
+        .attr('text-anchor', 'middle').attr('dy', '50px')
+        .attr('fill', '#7a8aaa')
+        .attr('font-family', 'Cinzel, serif')
+        .attr('font-size', '10.5px').attr('letter-spacing', '1.5px')
+        .style('pointer-events', 'none')
+        .attr('data-role', 'name')
+        .text(d => d.name.split(' ')[0].toUpperCase());
+
+      // House sub-label
+      $nodes.append('text')
+        .attr('text-anchor', 'middle').attr('dy', '62px')
+        .attr('fill', '#3a4a6a')
+        .attr('font-family', 'Cinzel, serif')
+        .attr('font-size', '8.5px').attr('letter-spacing', '.8px')
+        .style('pointer-events', 'none')
+        .text(d => d.house.split('/')[0].trim().replace('House ', '').toUpperCase());
+
+      // Chapter-count badge
+      $nodes.append('circle')
+        .attr('cx', 26).attr('cy', -26).attr('r', 9)
+        .attr('fill', d => d.color + '33')
+        .attr('stroke', d => d.color)
+        .attr('stroke-width', 1)
+        .style('pointer-events', 'none');
+      $nodes.append('text')
+        .attr('x', 26).attr('y', -26)
+        .attr('text-anchor', 'middle').attr('dy', '.35em')
+        .attr('fill', d => d.color)
+        .attr('font-family', 'Cinzel, serif')
+        .attr('font-size', '9px').attr('font-weight', '700')
+        .style('pointer-events', 'none')
+        .text(d => d.chapters.length);
+
+      // ── Events ──
+      $nodes
+        .on('mouseover', onNodeOver)
+        .on('mouseout', onNodeOut)
+        .on('click', onNodeClick);
+
+      // ── Tick ──
+      simulation.on('tick', () => {
+        $links
+          .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+        $linkLabels
+          .attr('x', d => (d.source.x + d.target.x) / 2)
+          .attr('y', d => (d.source.y + d.target.y) / 2);
+        $nodes.attr('transform', d => `translate(${d.x},${d.y})`);
+      });
+
+      // Initial center
+      svgSel.call(zoomBeh.transform, d3.zoomIdentity.translate(W / 2, H / 2).scale(1).translate(-W / 2, -H / 2));
+    }
+
+    // ── Node events ──────────────────────────────────────────
+    function onNodeOver(event, d) {
+      d3.select(this).select('.node-ring')
+        .transition().duration(180).attr('stroke-opacity', .55);
+      d3.select(this).select('.node-circle')
+        .transition().duration(180).attr('r', 38).attr('fill', d.color + '33');
+      positionTooltip(event, d);
+    }
+
+    function onNodeOut(event, d) {
+      d3.select(this).select('.node-ring')
+        .transition().duration(280).attr('stroke-opacity', 0);
+      d3.select(this).select('.node-circle')
+        .transition().duration(280).attr('r', 34).attr('fill', d.color + '1a');
+      // Delay hide so user can reach tooltip
+      clearTimeout(window._ttHide);
+      window._ttHide = setTimeout(() => {
+        if (!byId('tooltip').matches(':hover')) hideTooltip();
+      }, 220);
+    }
+
+    function onNodeClick(event, d) {
+      if (state.editMode) {
+        showEditForm(d.id);
+        notify(`Editing: ${d.name}`);
+      }
+    }
+
+    // ── Tooltip ──────────────────────────────────────────────
+    function positionTooltip(event, d) {
+      const tt = byId('tooltip');
+      const main = byId('main').getBoundingClientRect();
+      const chapObjs = d.chapters.map(getChap).filter(Boolean);
+
+      tt.innerHTML = `
+    <div class="tt-header">
+      <div class="tt-name">${d.name}</div>
+      <div class="tt-house">House ${d.house}</div>
+      <div class="tt-desc">${d.description}</div>
+    </div>
+    <div class="tt-body">
+      <div class="tt-chapters-label">CHAPTERS (${chapObjs.length})</div>
+      <div class="chapter-tags">
+        ${chapObjs.map(ch =>
+        `<span class="chapter-tag" onclick="openModal('${ch.id}')">${ch.title}</span>`
+      ).join('')}
+      </div>
+      <div class="tt-hint">${state.editMode ? '✎ Click node to edit' : '↗ Click a chapter tag to read'}</div>
+    </div>`;
+
+      let x = event.clientX - main.left + 18;
+      let y = event.clientY - main.top - 24;
+      if (x + 300 > main.width) x = event.clientX - main.left - 300 - 18;
+      if (y < 0) y = 8;
+      if (y + 260 > main.height) y = main.height - 270;
+
+      tt.style.left = x + 'px';
+      tt.style.top = y + 'px';
+      tt.classList.add('visible');
+    }
+
+    function hideTooltip() {
+      byId('tooltip').classList.remove('visible');
+    }
+    byId('tooltip').addEventListener('mouseleave', () => {
+      clearTimeout(window._ttHide);
+      hideTooltip();
+    });
+
+    // ── Node highlight (search) ──────────────────────────────
+    function highlightNodes(ids) {
+      if (!$nodes) return;
+      $nodes.selectAll('.node-circle')
+        .attr('opacity', ids ? d => ids.includes(d.id) ? 1 : .2 : 1);
+      if ($links) $links.attr('opacity', ids ? .12 : 1);
+    }
+
+    // ── Center / zoom to node ────────────────────────────────
+    function centerOnNode(charId) {
+      const container = byId('graph-view');
+      const W = container.clientWidth;
+      const H = container.clientHeight;
+      let target = null;
+      $nodes && $nodes.each(d => { if (d.id === charId) target = d; });
+      if (!target) return;
+      svgSel.transition().duration(700).call(
+        zoomBeh.transform,
+        d3.zoomIdentity.translate(W / 2, H / 2).scale(1.5)
+          .translate(-target.x, -target.y)
+      );
+      $nodes.filter(d => d.id === charId).select('.node-ring')
+        .transition().duration(350).attr('stroke-opacity', .8)
+        .transition().duration(700).attr('stroke-opacity', 0);
+    }
+
+
+    // ─────────────────────────────────────────────────────────
+    //  KEYBOARD SHORTCUTS
+    // ─────────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      const inInput = e.target.matches('input,textarea');
+      if (e.key === 'Escape') {
+        closeModal();
+        $searchResults.classList.remove('open');
+        $searchInput.value = '';
+        highlightNodes(null);
+      }
+      if (!inInput) {
+        if (e.key === 'g') switchView('graph');
+        if (e.key === 't') switchView('timeline');
+        if (e.key === 'e') toggleEdit();
+      }
+      if (e.key === '/' && !inInput) { e.preventDefault(); $searchInput.focus(); }
+    });
+
+
+    // ─────────────────────────────────────────────────────────
+    //  BOOT
+    // ─────────────────────────────────────────────────────────
+    initGraph();
+    initFuse();
+
+    window.addEventListener('resize', () => {
+      if (state.view === 'graph') initGraph();
+    });
+
+  </script>
+</body>
+
+</html>
