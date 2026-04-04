@@ -14,37 +14,32 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./app/frontend
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./app/frontend
 
       - name: Build
         run: npm run build
+        working-directory: ./app/frontend
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v1
         with:
-          path: ./app/frontend/dist  # ← Full path, since action runs at repo root
+          path: ./app/frontend/dist
 
-  deploy:
-    needs: build-deploy
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

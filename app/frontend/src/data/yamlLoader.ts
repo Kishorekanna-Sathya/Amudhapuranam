@@ -43,10 +43,10 @@ async function fetchYaml<T>(path: string): Promise<T> {
 
 export async function loadStoryData(): Promise<StoryData> {
   const [charsData, chapsData, relsData, introData] = await Promise.all([
-    fetchYaml<{ characters: Character[] }>("/stories/characters.yaml"),
-    fetchYaml<{ chapters: Chapter[] }>("/stories/chapters.yaml"),
-    fetchYaml<{ relationships: Relationship[] }>("/stories/relationships.yaml"),
-    fetchYaml<{ title?: string; content: string }>("/stories/intro.yaml").catch(() => undefined),
+    fetchYaml<{ characters: Character[] }>(`${import.meta.env.BASE_URL}stories/characters.yaml`),
+    fetchYaml<{ chapters: Chapter[] }>(`${import.meta.env.BASE_URL}stories/chapters.yaml`),
+    fetchYaml<{ relationships: Relationship[] }>(`${import.meta.env.BASE_URL}stories/relationships.yaml`),
+    fetchYaml<{ title?: string; content: string }>(`${import.meta.env.BASE_URL}stories/intro.yaml`).catch(() => undefined),
   ]);
 
   return {
