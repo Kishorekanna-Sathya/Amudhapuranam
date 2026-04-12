@@ -36,6 +36,8 @@ export default function App() {
   const [searchResults, setSearchResults] = useState<{ characters: any[]; chapters: any[] }>({ characters: [], chapters: [] });
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchHighlightIds, setSearchHighlightIds] = useState<string[]>([]);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Edit state — character form
   const [selectedChar, setSelectedChar] = useState<Character | null>(null);
@@ -359,6 +361,7 @@ export default function App() {
 
         {/* Graph View */}
         <div className="graph-view" style={{ display: view === "graph" ? "block" : "none" }}>
+          <div className="graph-touch-hint">Pinch to zoom · Drag nodes</div>
           <ForceGraph
             characters={data.characters} chapters={data.chapters} relationships={data.relationships}
             editMode={editMode} searchHighlightIds={searchHighlightIds}
@@ -460,7 +463,7 @@ export default function App() {
                   <div key={c.id} className="ep-chapter-card" onClick={() => selectChar(c)} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div style={{ width: 12, height: 12, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="ep-chapter-card-title" style={{ fontFamily: "Cinzel, serif", fontSize: "13px" }}>{c.name}</div>
+                      <div className="ep-chapter-card-title" style={{ fontFamily: "'Quicksand', sans-serif", fontSize: "13px" }}>{c.name}</div>
                       <div className="ep-chapter-card-en">{c.role}</div>
                     </div>
                     <span style={{ fontSize: "11px", color: "var(--text3)" }}>{c.chapters.length} ch</span>
@@ -661,13 +664,98 @@ export default function App() {
               </>
             )}
           </div>
+          {/* Mobile close bar for edit panel */}
+          <div className="edit-panel-mobile-close" onClick={toggleEdit}>
+            ✕ CLOSE EDITOR
+          </div>
         </div>
       </main>
+
+      {/* ── BOTTOM NAV (mobile) ── */}
+      <nav className="bottom-nav">
+        <div className="bottom-nav-inner">
+          <div
+            id="bn-intro"
+            className={`bn-item ${view === "intro" ? "active" : ""}`}
+            onClick={() => setView("intro")}
+          >
+            <span className="bn-icon">📖</span>
+            <span className="bn-label">Intro</span>
+          </div>
+          <div
+            id="bn-graph"
+            className={`bn-item ${view === "graph" ? "active" : ""}`}
+            onClick={() => setView("graph")}
+          >
+            <span className="bn-icon">⬡</span>
+            <span className="bn-label">Graph</span>
+          </div>
+          <div
+            id="bn-timeline"
+            className={`bn-item ${view === "timeline" ? "active" : ""}`}
+            onClick={() => setView("timeline")}
+          >
+            <span className="bn-icon">◈</span>
+            <span className="bn-label">Timeline</span>
+          </div>
+          <div
+            id="bn-search"
+            className="bn-item"
+            onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchInputRef.current?.focus(), 80); }}
+          >
+            <span className="bn-icon">⌕</span>
+            <span className="bn-label">Search</span>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── MOBILE SEARCH OVERLAY ── */}
+      <div className={`search-overlay ${mobileSearchOpen ? "open" : ""}`}>
+        <div className="search-overlay-bar">
+          <button
+            className="search-overlay-back"
+            onClick={() => { setMobileSearchOpen(false); clearSearch(); }}
+            aria-label="Back"
+          >‹</button>
+          <input
+            ref={mobileSearchInputRef}
+            className="search-overlay-input"
+            type="text"
+            placeholder="Search characters, chapters…"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        <div className="search-overlay-results">
+          {searchQuery && searchResults.characters.length === 0 && searchResults.chapters.length === 0 && (
+            <div className="sr-empty">No results found</div>
+          )}
+          {searchResults.characters.length > 0 && <>
+            <div className="sr-group-label">CHARACTERS</div>
+            {searchResults.characters.map((c: any) => (
+              <div key={c.id} className="sr-item" onClick={() => { handleSearchHit("character", c.id); setMobileSearchOpen(false); }}>
+                <span className="sr-badge character">character</span>
+                <span className="sr-name">{c.name}</span>
+              </div>
+            ))}
+          </>}
+          {searchResults.chapters.length > 0 && <>
+            <div className="sr-group-label">CHAPTERS</div>
+            {searchResults.chapters.map((ch: any) => (
+              <div key={ch.id} className="sr-item" onClick={() => { handleSearchHit("chapter", ch.id); setMobileSearchOpen(false); }}>
+                <span className="sr-badge chapter">chapter</span>
+                <span className="sr-name">{ch.name}</span>
+              </div>
+            ))}
+          </>}
+        </div>
+      </div>
 
       {/* ── CHAPTER MODAL ── */}
       {activeChapter && (
         <div className="chapter-modal" onClick={(e) => e.target === e.currentTarget && setActiveChapter(null)}>
           <div className="modal-panel">
+            <div className="sheet-handle" />
             <div className="modal-content">
               <button className="modal-close" onClick={() => setActiveChapter(null)} title="Close (Esc)">×</button>
               <div className="modal-hdr">

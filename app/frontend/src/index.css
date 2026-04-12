@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600&display=swap");
-
 /* ── Apple System Fonts ─────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
@@ -51,11 +49,11 @@
     --glass:       rgba(232,127,204,0.04);
     --glass-border:rgba(232,127,204,0.15);
 
-    /* Fonts - Web fonts for consistent cross-browser rendering */
-    --font-ui:     'Crimson Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-title:  'Cinzel', 'Crimson Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-read:   'Crimson Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-tamil:  'InaiMathi', 'Tamil MN', 'Tamil Sangam MN', 'Noto Sans Tamil', -apple-system, sans-serif;
+    /* Fonts — Google Fonts (consistent on Mac, Windows, Linux) */
+    --font-ui:     'Montserrat', sans-serif;               /* English UI / body text */
+    --font-title:  'Quicksand', sans-serif;                /* Headings & display text */
+    --font-read:   'Montserrat', sans-serif;               /* Reading / prose */
+    --font-tamil:  'Anek Tamil', sans-serif;               /* All Tamil-script content */
 
     /* Mac OS UI variables */
     --mac-glass:   rgba(28, 28, 30, 0.75);
@@ -158,7 +156,7 @@
   .logo {
     @apply flex-shrink-0 flex flex-col leading-none justify-center mt-1;
     font-family: var(--font-title);
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.5px;
     color: var(--text);
@@ -298,7 +296,7 @@
   }
   .tt-name {
     font-family: var(--font-title);
-    @apply text-[16px] font-bold;
+    @apply text-[18px] font-bold;
     color: var(--text);
     letter-spacing: -0.2px;
   }
@@ -307,7 +305,7 @@
     color: var(--text3);
     font-family: var(--font-ui);
   }
-  .tt-desc  { @apply text-[12.5px] leading-relaxed mt-2; color: var(--text2); }
+  .tt-desc  { @apply text-[14px] leading-relaxed mt-2; color: var(--text2); }
   .tt-location {
     @apply inline-flex items-center gap-1 mt-2 text-xs italic font-medium;
     color: var(--loc);
@@ -373,7 +371,7 @@
   .tl-header     { @apply mb-[56px]; }
   .tl-main-title {
     font-family: var(--font-title);
-    @apply text-[32px] font-bold mb-[6px];
+    @apply text-[36px] font-bold mb-[6px];
     color: var(--text);
     letter-spacing: -0.5px;
   }
@@ -412,7 +410,7 @@
     font-family: var(--font-ui);
   }
   .tl-title-tamil {
-    @apply text-[20px] mb-[3px] transition-colors duration-200;
+    @apply text-[22px] mb-[3px] transition-colors duration-200;
     font-family: var(--font-tamil);
     color: var(--text);
     font-weight: 600;
@@ -430,7 +428,7 @@
   .tl-location::before { content: "📍"; @apply text-[10px]; }
   .tl-chars { @apply flex gap-[6px] flex-wrap; }
   .tl-char  {
-    @apply text-[12px] font-medium tracking-[0.08em] uppercase px-[8px] py-[3px];
+    @apply text-[14px] font-medium tracking-[0.08em] uppercase px-[8px] py-[3px];
     font-family: var(--font-ui);
   }
 
@@ -703,7 +701,7 @@
     @apply leading-[2.3] whitespace-pre-line;
     font-family: var(--font-tamil);
     color: var(--text);
-    font-size: clamp(15px, 1.8vw, 18px);
+    font-size: clamp(16px, 1.9vw, 20px);
   }
   /* Cinematic drop cap */
   .modal-text::first-letter {
@@ -794,7 +792,7 @@
     color: var(--amber);
   }
   .intro-text {
-    @apply leading-[2.6] whitespace-pre-line text-[16px];
+    @apply leading-[2.6] whitespace-pre-line text-[18px];
     font-family: var(--font-tamil);
     color: var(--text);
   }
@@ -816,11 +814,248 @@
   ::-webkit-scrollbar-thumb:hover { background: var(--amber-dim); }
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE — full treatment
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Bottom nav (replaces header view-controls on mobile) ── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  z-index: 300;
+  background: var(--mac-glass);
+  backdrop-filter: var(--mac-blur);
+  border-top: 0.5px solid var(--mac-border);
+  padding: 0 8px env(safe-area-inset-bottom);
+}
+.bottom-nav-inner {
+  display: flex;
+  align-items: center;
+  height: 56px;
+}
+.bn-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bn-item.active { background: var(--pink-bg); }
+.bn-icon {
+  font-size: 16px;
+  color: var(--text3);
+  line-height: 1;
+}
+.bn-item.active .bn-icon { color: var(--pink); }
+.bn-label {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.bn-item.active .bn-label { color: var(--pink); }
+
+/* ── Chapter modal → bottom sheet on mobile ── */
+.sheet-handle {
+  display: none;
+  width: 36px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+/* ── Search → full-screen overlay on mobile ── */
+.search-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--canvas);
+  flex-direction: column;
+}
+.search-overlay.open { display: flex; }
+.search-overlay-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--mac-glass);
+  backdrop-filter: var(--mac-blur);
+  border-bottom: 0.5px solid var(--mac-border);
+  flex-shrink: 0;
+}
+.search-overlay-back {
+  font-size: 22px;
+  color: var(--text2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.search-overlay-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid var(--border2);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  outline: none;
+}
+.search-overlay-input:focus { border-color: var(--pink); }
+.search-overlay-results { flex: 1; overflow-y: auto; padding: 0 16px; }
+
+/* ── Edit panel → full-screen slide-up on mobile ── */
+.edit-panel-mobile-close {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  z-index: 200;
+}
+
+/* pinch-zoom hint overlay on graph */
+.graph-touch-hint {
+  display: none;
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28,28,30,0.8);
+  backdrop-filter: blur(10px);
+  border: 0.5px solid var(--mac-border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 10px;
+  font-family: var(--font-ui);
+  color: var(--text3);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
 @media (max-width: 768px) {
-  .story-title        { @apply hidden; }
-  .search-wrap        { @apply max-w-[180px]; }
-  .instructions-panel { @apply hidden; }
-  .timeline-view      { @apply px-5 py-6; }
-  .edit-panel         { @apply w-full; }
+
+  /* ── Body & shell ── */
+  body { overflow: hidden; }
+  .app-shell { padding-bottom: 56px; } /* room for bottom nav */
+
+  /* ── Header — compact, no view controls ── */
+  .header {
+    height: 52px;
+    padding: 0 16px;
+  }
+  .view-controls { display: none; }       /* moved to bottom nav */
+  .story-title    { display: none; }
+  .logo-sep       { display: none; }
+  .logo           { font-size: 17px; }
+
+  /* ── Search — icon-only in header, full overlay on tap ── */
+  .search-wrap    { display: none; }      /* hidden; use icon in header instead */
+
+  /* ── Bottom nav — visible ── */
+  .bottom-nav     { display: block; }
+
+  /* ── Main area — account for bottom nav ── */
+  .main-area { bottom: 56px; }
+
+  /* ── Timeline — tighter padding ── */
+  .timeline-view {
+    padding: 20px 20px 24px;
+  }
+  .tl-header { margin-bottom: 28px; }
+  .tl-main-title { font-size: 22px; }
+  .tl-track { padding-left: 36px; }
+  .tl-title-tamil { font-size: 16px; }
+
+  /* ── Chapter modal → bottom sheet ── */
+  .chapter-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-panel {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: unset;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    flex-direction: column;
+    animation: sheetUp 0.35s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-panel::before { display: none; } /* remove left accent strip */
+  .sheet-handle { display: block; }       /* show drag handle */
+  .modal-hdr {
+    padding: 0 20px 16px;
+    padding-top: 0; /* handle provides top spacing */
+  }
+  .modal-body { padding: 16px 20px 32px; }
+  .modal-text { font-size: 15px; line-height: 2.1; }
+  .modal-close { top: 16px; right: 16px; }
+
+  /* ── Edit panel → full-screen ── */
+  .edit-panel {
+    width: 100%;
+    top: 52px; /* below header */
+    z-index: 250;
+  }
+  .edit-panel-mobile-close { display: flex; }
+
+  /* ── Graph touch hint ── */
+  .graph-touch-hint { display: block; }
+
+  /* ── Float panels — hide on mobile ── */
+  .legend-panel,
+  .rel-legend-panel,
+  .instructions-panel { display: none; }
+
+  /* ── Tooltip — docked to bottom instead of floating ── */
+  .tooltip {
+    position: fixed !important;
+    left: 16px !important; right: 16px !important;
+    bottom: 72px !important; /* above bottom nav */
+    top: auto !important;
+    max-width: none;
+    min-width: 0;
+    width: auto;
+    border-radius: 12px;
+  }
+}
+
+/* ── Very small phones ── */
+@media (max-width: 375px) {
+  .tl-title-tamil { font-size: 14px; }
+  .modal-title    { font-size: clamp(15px, 4vw, 18px); }
+  .bn-label       { display: none; } /* icon-only nav on tiny screens */
+}
+
+/* ── Safe area for notched/island phones ── */
+@media (max-width: 768px) {
+  .header { padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
+  .bottom-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(56px + env(safe-area-inset-bottom)); }
 }

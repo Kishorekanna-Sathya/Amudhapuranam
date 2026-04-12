@@ -34,3 +34,15 @@ relationships:
     target: ezhil
     type: Conflict
     label: Butterfly Effect
+
+  - id: r7
+    source: amudhan
+    target: pallavi
+    type: friend
+    label: Friends
+
+  - id: r8
+    source: vasu
+    target: pallavi
+    type: Alliance
+    label: Love Interest

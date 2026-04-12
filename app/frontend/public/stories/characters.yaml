@@ -14,7 +14,7 @@ characters:
   - id: vasu
     name: Vasu
     role: Friend
-    color: "#6ce4e2"
+    color: "#ff8000"
     description: |
       Protagonist's Friend.
     chapters:
@@ -33,7 +33,7 @@ characters:
   - id: raghavi
     name: Raghavi
     role: 
-    color: "#e87fcc"
+    color: "#aa80ff"
     description: |
       Ezhilan's Girl Friend.
     chapters:
@@ -52,8 +52,17 @@ characters:
   - id: valli
     name: Valli
     role: 
-    color: "#008000"
+    color: "#0086b3"
     description: |
       Amudhan's Love Interest.
     chapters:
       - valli
+ 
+  - id: pallavi
+    name: Pallavi
+    role: 
+    color: "#b30047"
+    description: |
+      Amudhan and Vasu's Classmate.
+    chapters:
+      - pallavi
