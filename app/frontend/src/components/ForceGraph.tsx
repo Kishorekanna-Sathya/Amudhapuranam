@@ -251,29 +251,6 @@ export default function ForceGraph({
         .style("pointer-events", "none")
         .text((d) => (d.role ?? "").split(" ")[0].toUpperCase());
 
-      // Chapter count badge
-      $nodes
-        .append("circle")
-        .attr("cx", 26)
-        .attr("cy", -26)
-        .attr("r", 9)
-        .attr("fill", (d) => d.color + "33")
-        .attr("stroke", (d) => d.color)
-        .attr("stroke-width", 1)
-        .style("pointer-events", "none");
-      $nodes
-        .append("text")
-        .attr("x", 26)
-        .attr("y", -26)
-        .attr("text-anchor", "middle")
-        .attr("dy", "0.35em")
-        .attr("fill", (d) => d.color)
-        .attr("font-family", "'Quicksand', sans-serif")
-        .attr("font-size", "10px")
-        .attr("font-weight", "700")
-        .style("pointer-events", "none")
-        .text((d) => d.chapters.length);
-
       // ── Events ────────────────────────────────────────────
       let ttHideTimer: ReturnType<typeof setTimeout>;
       const tooltip = document.getElementById("d3-tooltip");
