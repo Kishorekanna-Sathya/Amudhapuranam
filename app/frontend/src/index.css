@@ -807,6 +807,41 @@
     color: var(--amber);
   }
 
+  /* ── Mobile intro layout ───────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .intro-view {
+      @apply p-4;
+    }
+    .intro-book-window {
+      @apply flex-col h-[90vh] max-w-none;
+      position: relative;
+      padding-top: 5.5rem;
+    }
+    .intro-left {
+      @apply absolute top-4 left-4 w-24 h-24 rounded-[18px] overflow-hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      transform: translateZ(0);
+      z-index: 20;
+    }
+    .intro-author-photo {
+      @apply w-full h-full object-cover;
+    }
+    .intro-right {
+      @apply w-full p-6;
+    }
+    .intro-text-scroll {
+      @apply overflow-y-auto;
+    }
+    .intro-title {
+      @apply text-[24px] mb-4;
+    }
+    .intro-text {
+      @apply text-[16px] leading-[2.2];
+    }
+  }
+
   /* ── Scrollbars ─────────────────────────────────────────────────── */
   ::-webkit-scrollbar       { @apply w-[3px]; }
   ::-webkit-scrollbar-track { background: var(--surface); }
