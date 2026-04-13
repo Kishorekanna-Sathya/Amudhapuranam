@@ -10,6 +10,7 @@ characters:
       - va_ni_si
       - va_varu
       - valli
+      - pallavi
 
   - id: vasu
     name: Vasu
@@ -20,6 +21,7 @@ characters:
     chapters:
       - vet_kar
       - valli
+      - pallavi
 
   - id: ezhil
     name: Ezhilan
