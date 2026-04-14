@@ -44,7 +44,7 @@ characters:
   - id: jeya
     name: Jeyanthi
     role: 
-    color: "#6ce4e2"
+    color: "#4895d4"
     description: |
       Vasu's Sister.
     chapters:
@@ -63,7 +63,7 @@ characters:
   - id: pallavi
     name: Pallavi
     role: 
-    color: "#b30047"
+    color: "#2ce6cc"
     description: |
       Amudhan and Vasu's Classmate.
     chapters:
