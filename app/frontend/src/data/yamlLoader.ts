@@ -12,6 +12,7 @@ export interface Character {
 export interface Chapter {
   id: string;
   timeline: number;
+  chapterOrder?: number;  // display sort order for the index/TOC page
   titleEn: string;
   title: string;
   location: string;   // e.g. "Winterfell", "King's Landing"

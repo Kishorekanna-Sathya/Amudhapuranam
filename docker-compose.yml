@@ -3,6 +3,8 @@ services:
     build:
       context: ./app/frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_BASE=/Amudhapuranam/  # GitHub Pages sub-path
     container_name: story-frontend
     ports:
       - "3000:3000"

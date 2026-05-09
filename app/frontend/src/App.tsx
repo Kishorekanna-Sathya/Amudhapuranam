@@ -1,35 +1,45 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import Fuse from "fuse.js";
-import { loadStoryData, type Character, type Chapter, type Relationship, type StoryData } from "./data/yamlLoader";
+import { loadStoryData, type Character, type Chapter, type StoryData } from "./data/yamlLoader";
 import ForceGraph from "./components/ForceGraph";
 
-type View = "graph" | "timeline" | "intro";
-type EditTab = "characters" | "chapters" | "relations";
-
-function notify(msg: string) {
-  const el = document.getElementById("notif");
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add("show");
-  clearTimeout((el as any)._t);
-  (el as any)._t = setTimeout(() => el.classList.remove("show"), 2600);
-}
-
-// ── Unique ID generator ─────────────────────────────────
-function uid() {
-  return Math.random().toString(36).slice(2, 9);
-}
+type View = "graph" | "timeline" | "intro" | "index";
 
 export default function App() {
   const [data, setData] = useState<StoryData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [view, setView] = useState<View>("intro");
-  const [editMode, setEditMode] = useState(false);
-  const [editTab, setEditTab] = useState<EditTab>("characters");
 
   // Modal
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
+  const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">(() => {
+    return (localStorage.getItem("ap-font-size") as "sm" | "md" | "lg") ?? "md";
+  });
+
+  const cycleFontSize = (dir: 1 | -1) => {
+    const steps: Array<"sm" | "md" | "lg"> = ["sm", "md", "lg"];
+    const idx = steps.indexOf(fontSize);
+    const next = steps[Math.max(0, Math.min(steps.length - 1, idx + dir))];
+    setFontSize(next);
+    localStorage.setItem("ap-font-size", next);
+  };
+
+  const fontSizePx: Record<"sm" | "md" | "lg", string> = {
+    sm: "15px",
+    md: "19px",
+    lg: "23px",
+  };
+
+  // Reading progress
+  const [scrollPct, setScrollPct] = useState(0);
+  const handleModalScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const pct = el.scrollHeight <= el.clientHeight
+      ? 100
+      : Math.round((el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100);
+    setScrollPct(pct);
+  };
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,17 +48,6 @@ export default function App() {
   const [searchHighlightIds, setSearchHighlightIds] = useState<string[]>([]);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-
-  // Edit state — character form
-  const [selectedChar, setSelectedChar] = useState<Character | null>(null);
-  const [charForm, setCharForm] = useState<Partial<Character>>({});
-
-  // Edit state — chapter form
-  const [selectedChap, setSelectedChap] = useState<Chapter | null>(null);
-  const [chapForm, setChapForm] = useState<Partial<Chapter>>({});
-
-  // Edit state — relation form
-  const [relForm, setRelForm] = useState<Partial<Relationship>>({ type: "family" });
 
   const fuseRef = useRef<Fuse<any>>(null!);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -113,154 +112,13 @@ export default function App() {
       if (!inInput) {
         if (e.key === "g") setView("graph");
         if (e.key === "t") setView("timeline");
-        if (e.key === "e") toggleEdit();
+        if (e.key === "s") setView("index");
       }
       if (e.key === "/" && !inInput) { e.preventDefault(); searchInputRef.current?.focus(); }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [editMode]);
-
-  function toggleEdit() {
-    setEditMode((prev) => {
-      notify(prev ? "Edit mode OFF" : "Edit mode ON");
-      return !prev;
-    });
-    setSelectedChar(null);
-    setSelectedChap(null);
-  }
-
-  // ── Character CRUD ────────────────────────────────────
-  function selectChar(c: Character) {
-    setSelectedChar(c);
-    setCharForm({ ...c });
-    setEditTab("characters");
-  }
-
-  function saveCharacter() {
-    if (!data || !selectedChar) return;
-    const updated = data.characters.map((c) =>
-      c.id === selectedChar.id ? { ...c, ...charForm } as Character : c
-    );
-    setData({ ...data, characters: updated });
-    buildFuse({ ...data, characters: updated });
-    setSelectedChar(null);
-    notify("Character updated ✓");
-  }
-
-  function addCharacter() {
-    if (!data) return;
-    const newChar: Character = {
-      id: uid(), name: "New Character", role: "", color: "#888888",
-      description: "", chapters: [],
-    };
-    const updated = [...data.characters, newChar];
-    setData({ ...data, characters: updated });
-    buildFuse({ ...data, characters: updated });
-    selectChar(newChar);
-    notify("New character added — fill in the details");
-  }
-
-  function deleteCharacter() {
-    if (!data || !selectedChar) return;
-    if (!confirm(`Delete "${selectedChar.name}"?`)) return;
-    const updated = data.characters.filter((c) => c.id !== selectedChar.id);
-    // Remove from all chapter refs & relationships
-    const updatedChaps = data.chapters.map((ch) => ({
-      ...ch,
-      characters: ch.characters.filter((id) => id !== selectedChar.id),
-    }));
-    const updatedRels = data.relationships.filter(
-      (r) => r.source !== selectedChar.id && r.target !== selectedChar.id
-    );
-    const newData = { ...data, characters: updated, chapters: updatedChaps, relationships: updatedRels };
-    setData(newData);
-    buildFuse(newData);
-    setSelectedChar(null);
-    setCharForm({});
-    notify("Character deleted");
-  }
-
-  // ── Chapter CRUD ──────────────────────────────────────
-  function selectChap(ch: Chapter) {
-    setSelectedChap(ch);
-    setChapForm({ ...ch });
-    setEditTab("chapters");
-  }
-
-  function saveChapter() {
-    if (!data || !selectedChap) return;
-    const updated = data.chapters.map((c) =>
-      c.id === selectedChap.id ? { ...c, ...chapForm } as Chapter : c
-    );
-    setData({ ...data, chapters: updated });
-    buildFuse({ ...data, chapters: updated });
-    setSelectedChap(null);
-    notify("Chapter updated ✓");
-  }
-
-  function addChapter() {
-    if (!data) return;
-    const maxTl = data.chapters.reduce((m, c) => Math.max(m, c.timeline), 0);
-    const newChap: Chapter = {
-      id: uid(), timeline: maxTl + 1, titleEn: "New Chapter",
-      title: "புதிய அத்தியாயம்", location: "", characters: [], content: "",
-    };
-    const updated = [...data.chapters, newChap];
-    setData({ ...data, chapters: updated });
-    buildFuse({ ...data, chapters: updated });
-    selectChap(newChap);
-    notify("New chapter added — fill in the details");
-  }
-
-  function deleteChapter() {
-    if (!data || !selectedChap) return;
-    if (!confirm(`Delete "${selectedChap.titleEn}"?`)) return;
-    const updated = data.chapters.filter((c) => c.id !== selectedChap.id);
-    // Remove from character chapter refs
-    const updatedChars = data.characters.map((c) => ({
-      ...c,
-      chapters: c.chapters.filter((id) => id !== selectedChap.id),
-    }));
-    const newData = { ...data, chapters: updated, characters: updatedChars };
-    setData(newData);
-    buildFuse(newData);
-    setSelectedChap(null);
-    setChapForm({});
-    notify("Chapter deleted");
-  }
-
-  // Remove / add character reference from a chapter
-  function toggleCharInChap(charId: string) {
-    const chars = (chapForm.characters ?? []);
-    setChapForm({
-      ...chapForm,
-      characters: chars.includes(charId) ? chars.filter((x) => x !== charId) : [...chars, charId],
-    });
-  }
-
-  // ── Relationship CRUD ──────────────────────────────────
-  function addRelationship() {
-    if (!data || !relForm.source || !relForm.target || !relForm.label) {
-      notify("Fill in source, target and label"); return;
-    }
-    if (relForm.source === relForm.target) { notify("Source and target must differ"); return; }
-    const newRel: Relationship = {
-      id: uid(), source: relForm.source!, target: relForm.target!,
-      type: (relForm.type ?? "family") as "family" | "alliance" | "conflict",
-      label: relForm.label!,
-    };
-    const updated = [...data.relationships, newRel];
-    setData({ ...data, relationships: updated });
-    setRelForm({ type: "family" });
-    notify("Relationship added ✓");
-  }
-
-  function deleteRelationship(id: string) {
-    if (!data) return;
-    setData({ ...data, relationships: data.relationships.filter((r) => r.id !== id) });
-    notify("Relationship removed");
-  }
+  }, []);
 
   // ── Search hit ────────────────────────────────────────
   const handleSearchHit = (type: string, id: string) => {
@@ -277,7 +135,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="loading-screen">
-        <div className="loading-logo">AMUDHA PURANAM</div>
+        <div className="loading-logo">AMUDHAPURANAM</div>
         <div className="loading-text">Loading story…</div>
         <div className="loading-bar"><div className="loading-fill" /></div>
       </div>
@@ -286,12 +144,23 @@ export default function App() {
   if (!data) return <div className="loading-screen">Failed to load story data.</div>;
 
   const sortedChapters = [...data.chapters].sort((a, b) => a.timeline - b.timeline);
+  // TOC index — sort by chapterOrder, fall back to timeline if not set
+  const indexChapters = [...data.chapters].sort((a, b) =>
+    (a.chapterOrder ?? a.timeline) - (b.chapterOrder ?? b.timeline)
+  );
 
   return (
     <div className="app-shell">
       {/* ── HEADER ── */}
       <header className="header">
-        <div className="logo">AMUDHA PURANAM<small>Neighbourhood Amudhan</small></div>
+        <div className="logo">
+          <div className="logo-badge">அ</div>
+          <div className="logo-stack">
+            <span className="logo-en-kicker">AMUDHAPURANAM</span>
+            <span className="logo-tamil">அமுதபுராணம்</span>
+            <span className="logo-tagline">Neighbourhood Amudhan</span>
+          </div>
+        </div>
         <div className="logo-sep" />
 
         <div className="search-wrap" ref={searchWrapRef}>
@@ -330,32 +199,153 @@ export default function App() {
 
         <div className="view-controls">
           <button id="btn-intro" className={`btn ${view === "intro" ? "active" : ""}`} onClick={() => setView("intro")}>📖 INTRO</button>
+          <button id="btn-index" className={`btn ${view === "index" ? "active" : ""}`} onClick={() => setView("index")}>≡ STORIES</button>
           <button id="btn-graph" className={`btn ${view === "graph" ? "active" : ""}`} onClick={() => setView("graph")}>⬡ GRAPH</button>
           <button id="btn-timeline" className={`btn ${view === "timeline" ? "active" : ""}`} onClick={() => setView("timeline")}>◈ TIMELINE</button>
-          <button id="btn-edit" className={`btn ${editMode ? "edit-on" : ""}`} onClick={toggleEdit} disabled title="Edit Mode - Coming Soon">✎ EDIT</button>
+          <a
+            id="btn-insta"
+            className="btn insta-btn"
+            href="https://www.instagram.com/kaliyuga_magakavi/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Author on Instagram"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+            AUTHOR
+          </a>
         </div>
       </header>
 
       {/* ── MAIN ── */}
       <main className="main-area">
 
-        {/* Intro View */}
+        {/* ══ INTRO VIEW ══ */}
         <div className="intro-view" style={{ display: view === "intro" ? "flex" : "none" }}>
-          <div className="intro-book-window">
-            <button className="intro-close" onClick={() => setView("graph")} title="Go to Graph">×</button>
-            <div className="intro-left">
-              <img src={`${import.meta.env.BASE_URL}author.png`} alt="Author" className="intro-author-photo" />
-            </div>
-            <div className="intro-right">
-              <div className="intro-text-scroll">
+
+          {/* Photo — left column on desktop, background canvas on mobile (hidden by CSS on mobile) */}
+          <div className="intro-photo-panel">
+            <img
+              src={`${import.meta.env.BASE_URL}author.png`}
+              alt="Author — Amudhan"
+              className="intro-photo-img"
+            />
+            <div className="intro-photo-overlay" />
+            <div className="intro-photo-fade" />
+          </div>
+
+          {/* ── DESKTOP: editorial right panel ── */}
+          <div className="intro-content-panel">
+            <button className="intro-close" onClick={() => setView("index")} title="Close">×</button>
+            <div className="intro-watermark" aria-hidden="true">அ</div>
+            <div className="intro-top-rule" />
+            <div className="intro-content-inner">
+              <div className="intro-eyebrow-label">ESTABLISHED · NEIGHBOURHOOD · AMUDHAN</div>
+              <div className="intro-title-block">
+                <div className="intro-title-bar" />
                 {data.intro?.title && (
-                  <h1 className="intro-title">{data.intro.title.trim()}</h1>
+                  <h1 className="intro-hero-title">{data.intro.title.trim()}</h1>
                 )}
-                <div className="intro-text">
-                  {data.intro?.content || "No introductory content available."}
-                </div>
               </div>
+              <div className="intro-author-line">— Kishorekanna</div>
+              <div className="intro-separator" />
+              <div className="intro-hero-text">
+                {data.intro?.content || "No introductory content available."}
+              </div>
+              <button className="intro-hero-cta" onClick={() => setView("index")}>
+                BEGIN READING →
+              </button>
             </div>
+          </div>
+
+          {/* ══ MOBILE ONLY: Book Cover — single scrollable column ══ */}
+          <div className="m-intro">
+            {/* Painting */}
+            <div className="m-intro-painting">
+              <img src={`${import.meta.env.BASE_URL}author.png`} alt="Author" className="m-intro-painting-img" />
+              <div className="m-intro-painting-fade" />
+            </div>
+
+            {/* Glossy card */}
+            <div className="m-intro-card">
+              {/* Avatar */}
+              <div className="m-intro-avatar-ring">
+                <img src={`${import.meta.env.BASE_URL}author.png`} alt="Kishorekanna" className="m-intro-avatar-img" />
+              </div>
+
+              <button className="m-intro-skip" onClick={() => setView("index")}>Skip ×</button>
+
+              <div className="m-intro-eyebrow">AMUDHAPURANAM · NEIGHBOURHOOD STORIES</div>
+
+              {data.intro?.title && (
+                <div className="m-intro-title">{data.intro.title.trim()}</div>
+              )}
+
+              <div className="m-intro-byline">— Kishorekanna</div>
+              <div className="m-intro-sep" />
+
+              <div className="m-intro-body">
+                {data.intro?.content || "No introductory content available."}
+              </div>
+
+              <button className="m-intro-cta" onClick={() => setView("index")}>
+                BEGIN READING →
+              </button>
+            </div>
+          </div>
+
+        </div>{/* end .intro-view */}
+
+
+        {/* ── INDEX / TABLE OF CONTENTS VIEW ── */}
+        <div className="index-view" style={{ display: view === "index" ? "flex" : "none" }}>
+          <div className="index-header">
+            <div className="index-kicker">AMUDHAPURANAM</div>
+            <h1 className="index-title">கதைகள்</h1>
+            <div className="index-sub">All Stories · Sorted by chapter order · Click any card to read</div>
+          </div>
+          <div className="index-grid">
+            {indexChapters.map((ch, i) => {
+              const chars = ch.characters
+                .map((cid) => data.characters.find((c) => c.id === cid))
+                .filter(Boolean) as Character[];
+              const orderNum = ch.chapterOrder ?? ch.timeline;
+              return (
+                <button
+                  key={ch.id}
+                  type="button"
+                  className="index-card"
+                  onClick={() => setActiveChapter(ch)}
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
+                  <div className="index-card-num">{String(orderNum).padStart(2, "0")}</div>
+                  <div className="index-card-body">
+                    <div className="index-card-tamil">{ch.title}</div>
+                    <div className="index-card-en">{ch.titleEn}</div>
+                    {ch.location && (
+                      <div className="index-card-loc">{ch.location}</div>
+                    )}
+                    {chars.length > 0 && (
+                      <div className="index-card-chars">
+                        {chars.map((c) => (
+                          <span
+                            key={c.id}
+                            className="index-card-char"
+                            style={{ background: c.color + "18", border: `1px solid ${c.color}44`, color: c.color }}
+                          >
+                            {c.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="index-card-arrow">→</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -364,8 +354,8 @@ export default function App() {
           <div className="graph-touch-hint">Pinch to zoom · Drag nodes</div>
           <ForceGraph
             characters={data.characters} chapters={data.chapters} relationships={data.relationships}
-            editMode={editMode} searchHighlightIds={searchHighlightIds}
-            onNodeClick={(char) => { selectChar(char); if (!editMode) toggleEdit(); }}
+            editMode={false} searchHighlightIds={searchHighlightIds}
+            onNodeClick={() => {}}
             onTagClick={(id) => { const ch = data.chapters.find((c) => c.id === id); if (ch) setActiveChapter(ch); }}
           />
           <div id="d3-tooltip" className="tooltip" />
@@ -397,7 +387,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Timeline View */}
+        {/* ── CENTERED ALTERNATING TIMELINE ── */}
         <div className="timeline-view" style={{ display: view === "timeline" ? "block" : "none" }}>
           <div className="tl-header">
             <div className="tl-main-title">STORY TIMELINE</div>
@@ -406,19 +396,31 @@ export default function App() {
           <div className="tl-track">
             <div className="tl-rail" />
             <div className="tl-items">
-              {sortedChapters.map((ch) => {
+              {sortedChapters.map((ch, idx) => {
+                const side = idx % 2 === 0 ? "left" : "right";
                 const chars = ch.characters.map((cid) => data.characters.find((c) => c.id === cid)).filter(Boolean) as Character[];
                 return (
-                  <div key={ch.id} className="tl-item" onClick={() => setActiveChapter(ch)} tabIndex={0} role="button" onKeyDown={(e) => e.key === "Enter" && setActiveChapter(ch)}>
-                    <div className="tl-dot" />
-                    <div className="tl-num">EVENT {ch.timeline}</div>
-                    <div className="tl-title-tamil">{ch.title}</div>
-                    <div className="tl-title-en">{ch.titleEn}</div>
-                    {ch.location && <div className="tl-location">{ch.location}</div>}
-                    <div className="tl-chars">
-                      {chars.map((c) => (
-                        <span key={c.id} className="tl-char" style={{ background: c.color + "1a", border: `1px solid ${c.color}44`, color: c.color }}>{c.name}</span>
-                      ))}
+                  <div
+                    key={ch.id}
+                    className={`tl-item tl-item--${side}`}
+                    onClick={() => setActiveChapter(ch)}
+                    tabIndex={0}
+                    role="button"
+                    onKeyDown={(e) => e.key === "Enter" && setActiveChapter(ch)}
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    <div className="tl-dot">{ch.timeline}</div>
+                    <div className="tl-connector" />
+                    <div className="tl-card">
+                      <div className="tl-num">EVENT {ch.timeline}</div>
+                      <div className="tl-title-tamil">{ch.title}</div>
+                      <div className="tl-title-en">{ch.titleEn}</div>
+                      {ch.location && <div className="tl-location">{ch.location}</div>}
+                      <div className="tl-chars">
+                        {chars.map((c) => (
+                          <span key={c.id} className="tl-char" style={{ background: c.color + "1a", border: `1px solid ${c.color}44`, color: c.color }}>{c.name}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
@@ -427,248 +429,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* ════════ EDIT PANEL ════════ */}
-        <div className={`edit-panel ${editMode ? "open" : ""}`}>
-          {/* Header */}
-          <div className="ep-header">
-            <div className="ep-title">✎ STORY EDITOR</div>
-            <button className="ep-close-btn" onClick={toggleEdit} title="Close edit mode">×</button>
-          </div>
-
-          {/* Tab bar */}
-          <div className="ep-tabs">
-            {(["characters", "chapters", "relations"] as EditTab[]).map((t) => (
-              <button
-                key={t} className={`ep-tab ${editTab === t ? "active" : ""}`}
-                onClick={() => { setEditTab(t); setSelectedChar(null); setSelectedChap(null); }}
-                disabled
-                style={{ cursor: "not-allowed", opacity: 0.6 }}
-                title="Selection disabled"
-              >
-                {t === "characters" ? "⬡ CHARS" : t === "chapters" ? "◈ CHAPTERS" : "↔ RELATIONS"}
-              </button>
-            ))}
-          </div>
-
-          <div className="ep-body">
-
-            {/* ══ CHARACTERS TAB ══ */}
-            {editTab === "characters" && !selectedChar && (
-              <>
-                <div className="ep-section" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-                  <span>ALL CHARACTERS ({data.characters.length})</span>
-                  <button className="ep-btn ep-btn-primary ep-btn-sm" onClick={addCharacter}>+ ADD</button>
-                </div>
-                {data.characters.map((c) => (
-                  <div key={c.id} className="ep-chapter-card" onClick={() => selectChar(c)} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="ep-chapter-card-title" style={{ fontFamily: "'Quicksand', sans-serif", fontSize: "13px" }}>{c.name}</div>
-                      <div className="ep-chapter-card-en">{c.role}</div>
-                    </div>
-                    <span style={{ fontSize: "11px", color: "var(--text3)" }}>{c.chapters.length} ch</span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {editTab === "characters" && selectedChar && (
-              <>
-                <div className="ep-section" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-                  <span>EDIT CHARACTER</span>
-                  <button className="ep-btn ep-btn-secondary ep-btn-sm" onClick={() => { setSelectedChar(null); setCharForm({}); }}>← BACK</button>
-                </div>
-
-                <div className="ep-field">
-                  <label className="ep-label">NAME</label>
-                  <input className="ep-input" value={charForm.name ?? ""} onChange={(e) => setCharForm({ ...charForm, name: e.target.value })} />
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">ROLE / TITLE</label>
-                  <input className="ep-input" value={charForm.role ?? ""} onChange={(e) => setCharForm({ ...charForm, role: e.target.value })} placeholder="e.g. Lord Commander" />
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">NODE COLOUR</label>
-                  <div className="ep-color-row">
-                    <div className="ep-color-preview" style={{ background: charForm.color ?? "var(--surface2)" }} />
-                    <input className="ep-input ep-color-hex" value={charForm.color ?? ""} onChange={(e) => setCharForm({ ...charForm, color: e.target.value })} placeholder="var(--primary-600)" />
-                    <input type="color" value={charForm.color ?? "#999999"} onChange={(e) => setCharForm({ ...charForm, color: e.target.value })} style={{ width: 36, height: 32, padding: 2, border: "1px solid var(--border)", borderRadius: 4, cursor: "pointer" }} />
-                  </div>
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">DESCRIPTION</label>
-                  <textarea className="ep-textarea" style={{ fontFamily: "Crimson Pro, serif", fontSize: "14px", minHeight: 70 }} value={charForm.description ?? ""} onChange={(e) => setCharForm({ ...charForm, description: e.target.value })} rows={3} />
-                </div>
-
-                <div className="ep-section">LINKED CHAPTERS</div>
-                <div className="ep-chips">
-                  {(charForm.chapters ?? []).map((cid) => {
-                    const ch = data.chapters.find((c) => c.id === cid);
-                    if (!ch) return null;
-                    return (
-                      <span key={cid} className="ep-chip">
-                        {ch.title}
-                        <button className="ep-chip-remove" onClick={() => setCharForm({ ...charForm, chapters: (charForm.chapters ?? []).filter((x) => x !== cid) })}>×</button>
-                      </span>
-                    );
-                  })}
-                  {(charForm.chapters ?? []).length === 0 && <span style={{ color: "var(--text3)", fontSize: "12px" }}>No chapters linked</span>}
-                </div>
-                <select className="ep-select ep-field" value="" onChange={(e) => { if (e.target.value && !(charForm.chapters ?? []).includes(e.target.value)) setCharForm({ ...charForm, chapters: [...(charForm.chapters ?? []), e.target.value] }); }}>
-                  <option value="">+ Link a chapter…</option>
-                  {data.chapters.filter((ch) => !(charForm.chapters ?? []).includes(ch.id)).map((ch) => (
-                    <option key={ch.id} value={ch.id}>{ch.titleEn} ({ch.title})</option>
-                  ))}
-                </select>
-
-                <div className="ep-actions">
-                  <button className="ep-btn ep-btn-primary" onClick={saveCharacter}>SAVE</button>
-                  <button className="ep-btn ep-btn-danger" onClick={deleteCharacter}>DELETE</button>
-                </div>
-              </>
-            )}
-
-            {/* ══ CHAPTERS TAB ══ */}
-            {editTab === "chapters" && !selectedChap && (
-              <>
-                <div className="ep-section" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-                  <span>ALL CHAPTERS ({data.chapters.length})</span>
-                  <button className="ep-btn ep-btn-primary ep-btn-sm" onClick={addChapter}>+ ADD</button>
-                </div>
-                {sortedChapters.map((ch) => (
-                  <div key={ch.id} className="ep-chapter-card" onClick={() => selectChap(ch)}>
-                    <div className="ep-chapter-card-title">{ch.title}</div>
-                    <div className="ep-chapter-card-en">#{ch.timeline} · {ch.titleEn}</div>
-                    {ch.location && <div className="ep-chapter-card-loc">📍 {ch.location}</div>}
-                  </div>
-                ))}
-              </>
-            )}
-
-            {editTab === "chapters" && selectedChap && (
-              <>
-                <div className="ep-section" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-                  <span>EDIT CHAPTER</span>
-                  <button className="ep-btn ep-btn-secondary ep-btn-sm" onClick={() => { setSelectedChap(null); setChapForm({}); }}>← BACK</button>
-                </div>
-
-                <div className="ep-row">
-                  <div className="ep-field">
-                    <label className="ep-label">TIMELINE #</label>
-                    <input className="ep-input" type="number" value={chapForm.timeline ?? ""} onChange={(e) => setChapForm({ ...chapForm, timeline: Number(e.target.value) })} />
-                  </div>
-                  <div className="ep-field">
-                    <label className="ep-label">TITLE (EN)</label>
-                    <input className="ep-input" value={chapForm.titleEn ?? ""} onChange={(e) => setChapForm({ ...chapForm, titleEn: e.target.value })} />
-                  </div>
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">TITLE (TAMIL)</label>
-                  <input className="ep-input tamil-font" value={chapForm.title ?? ""} onChange={(e) => setChapForm({ ...chapForm, title: e.target.value })} />
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">LOCATION</label>
-                  <input className="ep-input" value={chapForm.location ?? ""} onChange={(e) => setChapForm({ ...chapForm, location: e.target.value })} placeholder="e.g. Winterfell" />
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">CONTENT (TAMIL)</label>
-                  <textarea className="ep-textarea" value={chapForm.content ?? ""} onChange={(e) => setChapForm({ ...chapForm, content: e.target.value })} rows={8} />
-                </div>
-
-                <div className="ep-section">CHARACTERS IN THIS CHAPTER</div>
-                <div className="ep-chips">
-                  {(chapForm.characters ?? []).map((cid) => {
-                    const c = data.characters.find((x) => x.id === cid);
-                    if (!c) return null;
-                    return (
-                      <span key={cid} className="ep-chip" style={{ borderColor: c.color + "44" }}>
-                        <span style={{ color: c.color }}>●</span> {c.name}
-                        <button className="ep-chip-remove" onClick={() => toggleCharInChap(cid)}>×</button>
-                      </span>
-                    );
-                  })}
-                  {(chapForm.characters ?? []).length === 0 && <span style={{ color: "var(--text3)", fontSize: "12px" }}>No characters tagged</span>}
-                </div>
-                <select className="ep-select ep-field" value="" onChange={(e) => { if (e.target.value) toggleCharInChap(e.target.value); }}>
-                  <option value="">+ Tag a character…</option>
-                  {data.characters.filter((c) => !(chapForm.characters ?? []).includes(c.id)).map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-
-                <div className="ep-actions">
-                  <button className="ep-btn ep-btn-primary" onClick={saveChapter}>SAVE</button>
-                  <button className="ep-btn ep-btn-danger" onClick={deleteChapter}>DELETE</button>
-                </div>
-              </>
-            )}
-
-            {/* ══ RELATIONS TAB ══ */}
-            {editTab === "relations" && (
-              <>
-                {/* Existing relationships */}
-                <div className="ep-section" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-                  <span>RELATIONSHIPS ({data.relationships.length})</span>
-                </div>
-                {data.relationships.map((r) => {
-                  const src = data.characters.find((c) => c.id === r.source);
-                  const tgt = data.characters.find((c) => c.id === r.target);
-                  return (
-                    <div key={r.id} className="ep-rel-card">
-                      <span className={`ep-rel-type ${r.type}`}>{r.type}</span>
-                      <div className="ep-rel-names">
-                        <span style={{ color: src?.color }}>{src?.name ?? r.source}</span>
-                        {" → "}
-                        <span style={{ color: tgt?.color }}>{tgt?.name ?? r.target}</span>
-                      </div>
-                      <div className="ep-rel-label">"{r.label}"</div>
-                      <button className="ep-rel-del" onClick={() => deleteRelationship(r.id)}>×</button>
-                    </div>
-                  );
-                })}
-
-                {/* Add new relationship */}
-                <div className="ep-section">ADD NEW RELATIONSHIP</div>
-
-                <div className="ep-field">
-                  <label className="ep-label">SOURCE CHARACTER</label>
-                  <select className="ep-select" value={relForm.source ?? ""} onChange={(e) => setRelForm({ ...relForm, source: e.target.value })}>
-                    <option value="">Select source…</option>
-                    {data.characters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="ep-field">
-                  <label className="ep-label">TARGET CHARACTER</label>
-                  <select className="ep-select" value={relForm.target ?? ""} onChange={(e) => setRelForm({ ...relForm, target: e.target.value })}>
-                    <option value="">Select target…</option>
-                    {data.characters.filter((c) => c.id !== relForm.source).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-                <div className="ep-row">
-                  <div className="ep-field">
-                    <label className="ep-label">TYPE</label>
-                    <select className="ep-select" value={relForm.type ?? "family"} onChange={(e) => setRelForm({ ...relForm, type: e.target.value as any })}>
-                      <option value="family">Family</option>
-                      <option value="alliance">Alliance</option>
-                      <option value="conflict">Conflict</option>
-                    </select>
-                  </div>
-                  <div className="ep-field">
-                    <label className="ep-label">LABEL</label>
-                    <input className="ep-input" value={relForm.label ?? ""} onChange={(e) => setRelForm({ ...relForm, label: e.target.value })} placeholder="e.g. Siblings" />
-                  </div>
-                </div>
-                <button className="ep-btn ep-btn-primary ep-btn-full" onClick={addRelationship}>
-                  + ADD RELATIONSHIP
-                </button>
-              </>
-            )}
-          </div>
-          {/* Mobile close bar for edit panel */}
-          <div className="edit-panel-mobile-close" onClick={toggleEdit}>
-            ✕ CLOSE EDITOR
-          </div>
-        </div>
       </main>
 
       {/* ── BOTTOM NAV (mobile) ── */}
@@ -681,6 +441,14 @@ export default function App() {
           >
             <span className="bn-icon">📖</span>
             <span className="bn-label">Intro</span>
+          </div>
+          <div
+            id="bn-index"
+            className={`bn-item ${view === "index" ? "active" : ""}`}
+            onClick={() => setView("index")}
+          >
+            <span className="bn-icon">≡</span>
+            <span className="bn-label">Stories</span>
           </div>
           <div
             id="bn-graph"
@@ -706,6 +474,23 @@ export default function App() {
             <span className="bn-icon">⌕</span>
             <span className="bn-label">Search</span>
           </div>
+          <a
+            id="bn-author"
+            className="bn-item"
+            href="https://www.instagram.com/kaliyuga_magakavi/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: 'none' }}
+          >
+            <span className="bn-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            <span className="bn-label">Author</span>
+          </a>
         </div>
       </nav>
 
@@ -758,6 +543,21 @@ export default function App() {
             <div className="sheet-handle" />
             <div className="modal-content">
               <button className="modal-close" onClick={() => setActiveChapter(null)} title="Close (Esc)">×</button>
+              <div className="modal-font-controls">
+                <button
+                  className="modal-font-btn"
+                  onClick={() => cycleFontSize(-1)}
+                  disabled={fontSize === "sm"}
+                  title="Decrease font size"
+                >A−</button>
+                <span className="modal-font-label">{fontSize.toUpperCase()}</span>
+                <button
+                  className="modal-font-btn"
+                  onClick={() => cycleFontSize(1)}
+                  disabled={fontSize === "lg"}
+                  title="Increase font size"
+                >A+</button>
+              </div>
               <div className="modal-hdr">
                 <div className="modal-num">CHAPTER {activeChapter.timeline} · {activeChapter.titleEn.toUpperCase()}</div>
                 <div className="modal-title">{activeChapter.title}</div>
@@ -774,7 +574,17 @@ export default function App() {
                   })}
                 </div>
               </div>
-              <div className="modal-body">
+              
+              {/* Progress bar is now fixed below the header, outside the scrolling body */}
+              <div className="modal-read-progress-container">
+                <div className="modal-read-progress" style={{ width: `${scrollPct}%` }} />
+              </div>
+
+              <div
+                className="modal-body"
+                style={{ "--modal-font-size": fontSizePx[fontSize] } as React.CSSProperties}
+                onScroll={handleModalScroll}
+              >
                 <div className="modal-text">{activeChapter.content}</div>
               </div>
             </div>
