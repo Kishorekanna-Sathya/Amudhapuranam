@@ -1,4 +1,4 @@
-# 🏰 Neighbourhood Amudhan · கதை வலையமைப்பு
+# Amudhapuranam · கதை வலையமைப்பு
 
 A **modern interactive non-linear storytelling web application** that visualizes a story as a dynamic, explorable graph. Built with a premium dark fantasy aesthetic and story content written in **Tamil**.
 
