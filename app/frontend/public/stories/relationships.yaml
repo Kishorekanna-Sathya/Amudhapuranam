@@ -46,3 +46,9 @@ relationships:
     target: pallavi
     type: Alliance
     label: Love Interest
+
+  - id: r9
+    source: amudhan
+    target: vennila
+    type: Alliance
+    label: Love
