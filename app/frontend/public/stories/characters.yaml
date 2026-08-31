@@ -68,3 +68,12 @@ characters:
       Amudhan and Vasu's Classmate.
     chapters:
       - pallavi
+      
+  - id: vennila
+    name: Vennila
+    role: 
+    color: "#ffff33"
+    description: |
+      Amudhan's Love.
+    chapters:
+      - nila_1
