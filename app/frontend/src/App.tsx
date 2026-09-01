@@ -205,7 +205,7 @@ export default function App() {
           <a
             id="btn-insta"
             className="btn insta-btn"
-            href="https://www.instagram.com/kaliyuga_magakavi/"
+            href="https://www.instagram.com/the.goated.ink/"
             target="_blank"
             rel="noopener noreferrer"
             title="Author on Instagram"
@@ -477,7 +477,7 @@ export default function App() {
           <a
             id="bn-author"
             className="bn-item"
-            href="https://www.instagram.com/kaliyuga_magakavi/"
+            href="https://www.instagram.com/the.goated.ink/"
             target="_blank"
             rel="noopener noreferrer"
             style={{ textDecoration: 'none' }}
