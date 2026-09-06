@@ -11,6 +11,8 @@ characters:
       - va_varu
       - valli
       - pallavi
+      - nila_1
+      - msd_1
 
   - id: vasu
     name: Vasu
@@ -22,6 +24,8 @@ characters:
       - vet_kar
       - valli
       - pallavi
+      - nila_1
+      - msd_1
 
   - id: ezhil
     name: Ezhilan
