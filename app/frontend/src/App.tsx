@@ -250,7 +250,7 @@ export default function App() {
                   <h1 className="intro-hero-title">{data.intro.title.trim()}</h1>
                 )}
               </div>
-              <div className="intro-author-line">— Kishorekanna</div>
+              <div className="intro-author-line">— Kidaa</div>
               <div className="intro-separator" />
               <div className="intro-hero-text">
                 {data.intro?.content || "No introductory content available."}
@@ -273,7 +273,7 @@ export default function App() {
             <div className="m-intro-card">
               {/* Avatar */}
               <div className="m-intro-avatar-ring">
-                <img src={`${import.meta.env.BASE_URL}author.png`} alt="Kishorekanna" className="m-intro-avatar-img" />
+                <img src={`${import.meta.env.BASE_URL}author.png`} alt="Kidaa" className="m-intro-avatar-img" />
               </div>
 
               <button className="m-intro-skip" onClick={() => setView("index")}>Skip ×</button>
@@ -284,7 +284,7 @@ export default function App() {
                 <div className="m-intro-title">{data.intro.title.trim()}</div>
               )}
 
-              <div className="m-intro-byline">— Kishorekanna</div>
+              <div className="m-intro-byline">— Kidaa</div>
               <div className="m-intro-sep" />
 
               <div className="m-intro-body">
