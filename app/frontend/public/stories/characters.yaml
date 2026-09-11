@@ -13,6 +13,7 @@ characters:
       - pallavi
       - nila_1
       - msd_1
+      - angel_in
 
   - id: vasu
     name: Vasu
@@ -26,6 +27,7 @@ characters:
       - pallavi
       - nila_1
       - msd_1
+      - angel_in
 
   - id: ezhil
     name: Ezhilan
@@ -54,6 +56,7 @@ characters:
     chapters:
       - vet_kar
       - valli
+      - angel_in
 
   - id: valli
     name: Valli
@@ -63,6 +66,7 @@ characters:
       Amudhan's Love Interest.
     chapters:
       - valli
+      - angel_in
  
   - id: pallavi
     name: Pallavi
