@@ -1,0 +1,60 @@
+{
+  "characters": [
+    {
+      "id": "amudhan",
+      "name": "Amudhan",
+      "role": "Protagonist",
+      "color": "#C4552F",
+      "description": "Protagonist of the story."
+    },
+    {
+      "id": "vasu",
+      "name": "Vasu",
+      "role": "Friend",
+      "color": "#6C5CE7",
+      "description": "Protagonist's Friend."
+    },
+    {
+      "id": "ezhil",
+      "name": "Ezhilan",
+      "role": "Savior",
+      "color": "#2980B9",
+      "description": "Pilot Aspirant."
+    },
+    {
+      "id": "raghavi",
+      "name": "Raghavi",
+      "role": "",
+      "color": "#8E44AD",
+      "description": "Ezhilan's Girl Friend."
+    },
+    {
+      "id": "jeya",
+      "name": "Jeyanthi",
+      "role": "",
+      "color": "#27AE60",
+      "description": "Vasu's Sister, Amudhan's Too"
+    },
+    {
+      "id": "valli",
+      "name": "Valli",
+      "role": "Amudhan Love",
+      "color": "#16A085",
+      "description": "Amudhan's First Love. \n Vasu's Neighbourhood. \n Jeys's Friend"
+    },
+    {
+      "id": "pallavi",
+      "name": "Pallavi",
+      "role": "",
+      "color": "#2575FC",
+      "description": "Amudhan and Vasu's Classmate. \n Vasu's Love Interest"
+    },
+    {
+      "id": "vennila",
+      "name": "Vennila",
+      "role": "Amudhans Love",
+      "color": "#D35400",
+      "description": "Amudhan's First Relationship."
+    }
+  ]
+}

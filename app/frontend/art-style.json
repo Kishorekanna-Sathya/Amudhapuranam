@@ -1,0 +1,55 @@
+{
+    "art_style": {
+        "medium": "Graphite pencil drawing",
+        "style": "Loose, expressive observational sketch",
+        "visual_category": "Black-and-white figure illustration",
+        "linework": {
+            "quality": "Organic, hand-drawn, varied line weight",
+            "character": "Loose, gestural and slightly rough",
+            "details": "Selective detailing with emphasis on facial features, anatomy and clothing folds"
+        },
+        "shading": {
+            "technique": [
+                "Cross-hatching",
+                "Directional hatching",
+                "Soft graphite tonal shading",
+                "Layered pencil strokes"
+            ],
+            "contrast": "Moderate with strong dark accents",
+            "texture": "Visible pencil grain and sketch strokes"
+        },
+        "color_palette": {
+            "type": "Monochromatic",
+            "dominant": "Graphite gray",
+            "range": "White paper to deep charcoal-gray shadows"
+        },
+        "composition": {
+            "approach": "Figure-focused with generous white space",
+            "perspective": "Natural observational perspective",
+            "layout": "Multiple human poses arranged like a study sheet"
+        },
+        "background": {
+            "treatment": "Minimal",
+            "elements": "Sparse architectural/environmental indications",
+            "purpose": "Keeps focus on the figures"
+        },
+        "overall_aesthetic": [
+            "Traditional life-drawing study",
+            "Editorial pencil illustration",
+            "Academic figure sketch",
+            "Hand-rendered concept art",
+            "Expressive graphite artwork"
+        ],
+        "key_style_keywords": [
+            "graphite sketch",
+            "pencil illustration",
+            "loose linework",
+            "gestural drawing",
+            "cross-hatching",
+            "monochrome",
+            "observational figure study",
+            "expressive shading",
+            "traditional hand-drawn"
+        ]
+    }
+}

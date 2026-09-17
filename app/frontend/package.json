@@ -10,11 +10,9 @@
   },
   "dependencies": {
     "@types/d3": "^7.4.3",
-    "@types/js-yaml": "^4.0.9",
     "@xyflow/react": "^12.3.6",
     "d3": "^7.9.0",
     "fuse.js": "^7.0.0",
-    "js-yaml": "^4.1.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

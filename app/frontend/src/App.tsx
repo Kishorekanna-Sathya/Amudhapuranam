@@ -1,9 +1,18 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import Fuse from "fuse.js";
-import { loadStoryData, type Character, type Chapter, type StoryData } from "./data/yamlLoader";
-import ForceGraph from "./components/ForceGraph";
+import { useEffect, useState } from "react";
+import { loadStoryData, type Character, type Chapter, type StoryData } from "./data/jsonLoader";
+import CharacterTree from "./components/CharacterTree";
+import StoryTree from "./components/StoryTree";
 
-type View = "graph" | "timeline" | "intro" | "index";
+type View = "graph" | "tree" | "intro" | "index";
+type Theme = "light" | "dark";
+
+// ── Theme helpers ─────────────────────────────────────────────────────
+function getSystemTheme(): Theme {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+}
 
 export default function App() {
   const [data, setData] = useState<StoryData | null>(null);
@@ -11,6 +20,8 @@ export default function App() {
 
   const [view, setView] = useState<View>("intro");
 
+  // ── Theme state ───────────────────────────────────────────────────
+  const [theme, setTheme] = useState<Theme>("light");
   // Modal
   const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">(() => {
@@ -23,6 +34,33 @@ export default function App() {
     const next = steps[Math.max(0, Math.min(steps.length - 1, idx + dir))];
     setFontSize(next);
     localStorage.setItem("ap-font-size", next);
+  };
+
+  // ── Theme initialisation — runs once on mount ────────────────────
+  useEffect(() => {
+    const stored = localStorage.getItem("ap-theme") as Theme | null;
+    const resolved: Theme = stored ?? getSystemTheme();
+    setTheme(resolved);
+    applyTheme(resolved);
+
+    // Keep in sync with OS when user hasn't manually set a preference
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onOsChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem("ap-theme")) {
+        const next: Theme = e.matches ? "dark" : "light";
+        setTheme(next);
+        applyTheme(next);
+      }
+    };
+    mq.addEventListener("change", onOsChange);
+    return () => mq.removeEventListener("change", onOsChange);
+  }, []);
+
+  const toggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    applyTheme(next);
+    localStorage.setItem("ap-theme", next);
   };
 
   const fontSizePx: Record<"sm" | "md" | "lg", string> = {
@@ -41,95 +79,28 @@ export default function App() {
     setScrollPct(pct);
   };
 
-  // Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{ characters: any[]; chapters: any[] }>({ characters: [], chapters: [] });
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchHighlightIds, setSearchHighlightIds] = useState<string[]>([]);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-
-  const fuseRef = useRef<Fuse<any>>(null!);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchWrapRef = useRef<HTMLDivElement>(null);
-
-  // ── Load YAML ────────────────────────────────────────
+  // ── Load JSON ────────────────────────────────────────
   useEffect(() => {
     loadStoryData()
-      .then((d) => { setData(d); buildFuse(d); })
+      .then((d) => { setData(d); })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
-
-  function buildFuse(d: StoryData) {
-    const items = [
-      ...d.characters.map((c) => ({ type: "character", id: c.id, name: c.name, text: [c.description, c.role].join(" ") })),
-      ...d.chapters.map((ch) => ({ type: "chapter", id: ch.id, name: ch.title + " — " + ch.titleEn, text: ch.content + " " + ch.location })),
-    ];
-    fuseRef.current = new Fuse(items, { keys: [{ name: "name", weight: 0.6 }, { name: "text", weight: 0.4 }], threshold: 0.4, includeScore: true });
-  }
-
-  // ── Search ────────────────────────────────────────────
-  const handleSearch = useCallback((q: string) => {
-    setSearchQuery(q);
-    if (!q.trim() || !fuseRef.current) {
-      setSearchResults({ characters: [], chapters: [] });
-      setSearchOpen(false);
-      setSearchHighlightIds([]);
-      return;
-    }
-    const hits = fuseRef.current.search(q).slice(0, 10);
-    const chars = hits.filter((h) => h.item.type === "character").map((h) => h.item);
-    const chaps = hits.filter((h) => h.item.type === "chapter").map((h) => h.item);
-    setSearchResults({ characters: chars, chapters: chaps });
-    setSearchOpen(hits.length > 0);
-    const charIds = new Set<string>(chars.map((c: any) => c.id));
-    chaps.forEach((ch: any) => {
-      const chapter = data?.chapters.find((c) => c.id === ch.id);
-      chapter?.characters.forEach((cid) => charIds.add(cid));
-    });
-    setSearchHighlightIds(Array.from(charIds));
-  }, [data]);
-
-  const clearSearch = () => {
-    setSearchQuery(""); setSearchResults({ characters: [], chapters: [] });
-    setSearchOpen(false); setSearchHighlightIds([]);
-  };
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (!searchWrapRef.current?.contains(e.target as Node)) setSearchOpen(false);
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
   }, []);
 
   // ── Keyboard shortcuts ────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const inInput = (e.target as HTMLElement).matches("input, textarea, select");
-      if (e.key === "Escape") { setActiveChapter(null); clearSearch(); }
+      if (e.key === "Escape") { setActiveChapter(null); }
       if (!inInput) {
         if (e.key === "g") setView("graph");
-        if (e.key === "t") setView("timeline");
+        if (e.key === "t") setView("tree");
         if (e.key === "s") setView("index");
       }
-      if (e.key === "/" && !inInput) { e.preventDefault(); searchInputRef.current?.focus(); }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
-
-  // ── Search hit ────────────────────────────────────────
-  const handleSearchHit = (type: string, id: string) => {
-    clearSearch();
-    if (type === "chapter") {
-      const ch = data?.chapters.find((c) => c.id === id);
-      if (ch) setActiveChapter(ch);
-    } else {
-      setView("graph");
-    }
-  };
 
   // ── Loading ───────────────────────────────────────────
   if (loading) {
@@ -163,45 +134,11 @@ export default function App() {
         </div>
         <div className="logo-sep" />
 
-        <div className="search-wrap" ref={searchWrapRef}>
-          <span className="search-icon">⌕</span>
-          <input
-            id="search-input" ref={searchInputRef} className="search-input" type="text"
-            placeholder="Search characters, chapters, locations…"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            onFocus={() => searchQuery && setSearchOpen(true)}
-          />
-          <div id="search-results" className={`search-results ${searchOpen ? "open" : ""}`}>
-            {searchResults.characters.length === 0 && searchResults.chapters.length === 0 && (
-              <div className="sr-empty">No results found</div>
-            )}
-            {searchResults.characters.length > 0 && <>
-              <div className="sr-group-label">CHARACTERS</div>
-              {searchResults.characters.map((c: any) => (
-                <div key={c.id} className="sr-item" onClick={() => handleSearchHit("character", c.id)}>
-                  <span className="sr-badge character">character</span>
-                  <span className="sr-name">{c.name}</span>
-                </div>
-              ))}
-            </>}
-            {searchResults.chapters.length > 0 && <>
-              <div className="sr-group-label">CHAPTERS</div>
-              {searchResults.chapters.map((ch: any) => (
-                <div key={ch.id} className="sr-item" onClick={() => handleSearchHit("chapter", ch.id)}>
-                  <span className="sr-badge chapter">chapter</span>
-                  <span className="sr-name">{ch.name}</span>
-                </div>
-              ))}
-            </>}
-          </div>
-        </div>
-
         <div className="view-controls">
           <button id="btn-intro" className={`btn ${view === "intro" ? "active" : ""}`} onClick={() => setView("intro")}>📖 INTRO</button>
           <button id="btn-index" className={`btn ${view === "index" ? "active" : ""}`} onClick={() => setView("index")}>≡ STORIES</button>
-          <button id="btn-graph" className={`btn ${view === "graph" ? "active" : ""}`} onClick={() => setView("graph")}>⬡ GRAPH</button>
-          <button id="btn-timeline" className={`btn ${view === "timeline" ? "active" : ""}`} onClick={() => setView("timeline")}>◈ TIMELINE</button>
+          <button id="btn-graph" className={`btn ${view === "graph" ? "active" : ""}`} onClick={() => setView("graph")}>⬡ CHARACTERS TREE</button>
+          <button id="btn-tree" className={`btn ${view === "tree" ? "active" : ""}`} onClick={() => setView("tree")}>◈ STORY TREE</button>
           <a
             id="btn-insta"
             className="btn insta-btn"
@@ -217,6 +154,16 @@ export default function App() {
             </svg>
             AUTHOR
           </a>
+          <button
+            id="btn-theme-toggle"
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle theme"
+          >
+            <span className="theme-toggle-icon">{theme === "dark" ? "☀︎" : "☽"}</span>
+            <span className="theme-toggle-label">{theme === "dark" ? "LIGHT" : "DARK"}</span>
+          </button>
         </div>
       </header>
 
@@ -349,84 +296,23 @@ export default function App() {
           </div>
         </div>
 
-        {/* Graph View */}
-        <div className="graph-view" style={{ display: view === "graph" ? "block" : "none" }}>
-          <div className="graph-touch-hint">Pinch to zoom · Drag nodes</div>
-          <ForceGraph
+        {/* Characters Tree View */}
+        <div className="graph-view" style={{ display: view === "graph" ? "flex" : "none", flexDirection: "column" }}>
+          <CharacterTree
             characters={data.characters} chapters={data.chapters} relationships={data.relationships}
-            editMode={false} searchHighlightIds={searchHighlightIds}
+            editMode={false} searchHighlightIds={[]}
             onNodeClick={() => {}}
             onTagClick={(id) => { const ch = data.chapters.find((c) => c.id === id); if (ch) setActiveChapter(ch); }}
           />
-          <div id="d3-tooltip" className="tooltip" />
-
-          {/* Character/Relationship Legend */}
-          <div className="float-panel legend-panel">
-            <div className="fp-title">CHARACTERS</div>
-            {data.characters.slice(0, 5).map((c) => (
-              <div key={c.id} className="leg-item">
-                <div className="leg-dot" style={{ background: c.color }} />
-                <span className="leg-name">{c.name.split(" ")[0]}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="float-panel rel-legend-panel">
-            <div className="fp-title">RELATIONSHIPS</div>
-            <div className="rel-line"><div className="rel-seg" style={{ background: "var(--primary-600)" }} /><span className="leg-name">Family</span></div>
-            <div className="rel-line"><div className="rel-seg" style={{ background: "var(--secondary-600)" }} /><span className="leg-name">Alliance</span></div>
-            <div className="rel-line"><div className="rel-seg" style={{ background: "repeating-linear-gradient(90deg,var(--accent-600) 0,var(--accent-600) 4px,transparent 4px,transparent 8px)" }} /><span className="leg-name">Conflict</span></div>
-          </div>
-
-          <div className="float-panel instructions-panel">
-            <div className="fp-title">EXPLORE</div>
-            <div className="inst-item"><span className="inst-key">HOVER</span> node → see chapters</div>
-            <div className="inst-item"><span className="inst-key">CLICK</span> chapter tag → read it</div>
-            <div className="inst-item"><span className="inst-key">DRAG</span> nodes to rearrange</div>
-            <div className="inst-item"><span className="inst-key">SCROLL</span> to zoom · <span className="inst-key">/</span> search</div>
-          </div>
         </div>
 
-        {/* ── CENTERED ALTERNATING TIMELINE ── */}
-        <div className="timeline-view" style={{ display: view === "timeline" ? "block" : "none" }}>
-          <div className="tl-header">
-            <div className="tl-main-title">STORY TIMELINE</div>
-            <div className="tl-sub">Events in chronological order · Click any chapter to read</div>
-          </div>
-          <div className="tl-track">
-            <div className="tl-rail" />
-            <div className="tl-items">
-              {sortedChapters.map((ch, idx) => {
-                const side = idx % 2 === 0 ? "left" : "right";
-                const chars = ch.characters.map((cid) => data.characters.find((c) => c.id === cid)).filter(Boolean) as Character[];
-                return (
-                  <div
-                    key={ch.id}
-                    className={`tl-item tl-item--${side}`}
-                    onClick={() => setActiveChapter(ch)}
-                    tabIndex={0}
-                    role="button"
-                    onKeyDown={(e) => e.key === "Enter" && setActiveChapter(ch)}
-                    style={{ animationDelay: `${idx * 60}ms` }}
-                  >
-                    <div className="tl-dot">{ch.timeline}</div>
-                    <div className="tl-connector" />
-                    <div className="tl-card">
-                      <div className="tl-num">EVENT {ch.timeline}</div>
-                      <div className="tl-title-tamil">{ch.title}</div>
-                      <div className="tl-title-en">{ch.titleEn}</div>
-                      {ch.location && <div className="tl-location">{ch.location}</div>}
-                      <div className="tl-chars">
-                        {chars.map((c) => (
-                          <span key={c.id} className="tl-char" style={{ background: c.color + "1a", border: `1px solid ${c.color}44`, color: c.color }}>{c.name}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        {/* ── STORY TREE HIERARCHY VIEW ── */}
+        <div className="story-tree-view" style={{ display: view === "tree" ? "block" : "none", position: "absolute", inset: 0 }}>
+          <StoryTree
+            chapters={data.chapters}
+            characters={data.characters}
+            onSelectChapter={(ch) => setActiveChapter(ch)}
+          />
         </div>
 
       </main>
@@ -456,23 +342,25 @@ export default function App() {
             onClick={() => setView("graph")}
           >
             <span className="bn-icon">⬡</span>
-            <span className="bn-label">Graph</span>
+            <span className="bn-label">Chars</span>
           </div>
           <div
-            id="bn-timeline"
-            className={`bn-item ${view === "timeline" ? "active" : ""}`}
-            onClick={() => setView("timeline")}
+            id="bn-tree"
+            className={`bn-item ${view === "tree" ? "active" : ""}`}
+            onClick={() => setView("tree")}
           >
             <span className="bn-icon">◈</span>
-            <span className="bn-label">Timeline</span>
+            <span className="bn-label">Tree</span>
           </div>
+          {/* Theme toggle */}
           <div
-            id="bn-search"
-            className="bn-item"
-            onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchInputRef.current?.focus(), 80); }}
+            id="bn-theme"
+            className="bn-item bn-theme-highlight"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            <span className="bn-icon">⌕</span>
-            <span className="bn-label">Search</span>
+            <span className="bn-icon">{theme === "dark" ? "☀︎" : "☽"}</span>
+            <span className="bn-label">{theme === "dark" ? "Light" : "Dark"}</span>
           </div>
           <a
             id="bn-author"
@@ -493,48 +381,6 @@ export default function App() {
           </a>
         </div>
       </nav>
-
-      {/* ── MOBILE SEARCH OVERLAY ── */}
-      <div className={`search-overlay ${mobileSearchOpen ? "open" : ""}`}>
-        <div className="search-overlay-bar">
-          <button
-            className="search-overlay-back"
-            onClick={() => { setMobileSearchOpen(false); clearSearch(); }}
-            aria-label="Back"
-          >‹</button>
-          <input
-            ref={mobileSearchInputRef}
-            className="search-overlay-input"
-            type="text"
-            placeholder="Search characters, chapters…"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
-        <div className="search-overlay-results">
-          {searchQuery && searchResults.characters.length === 0 && searchResults.chapters.length === 0 && (
-            <div className="sr-empty">No results found</div>
-          )}
-          {searchResults.characters.length > 0 && <>
-            <div className="sr-group-label">CHARACTERS</div>
-            {searchResults.characters.map((c: any) => (
-              <div key={c.id} className="sr-item" onClick={() => { handleSearchHit("character", c.id); setMobileSearchOpen(false); }}>
-                <span className="sr-badge character">character</span>
-                <span className="sr-name">{c.name}</span>
-              </div>
-            ))}
-          </>}
-          {searchResults.chapters.length > 0 && <>
-            <div className="sr-group-label">CHAPTERS</div>
-            {searchResults.chapters.map((ch: any) => (
-              <div key={ch.id} className="sr-item" onClick={() => { handleSearchHit("chapter", ch.id); setMobileSearchOpen(false); }}>
-                <span className="sr-badge chapter">chapter</span>
-                <span className="sr-name">{ch.name}</span>
-              </div>
-            ))}
-          </>}
-        </div>
-      </div>
 
       {/* ── CHAPTER MODAL ── */}
       {activeChapter && (

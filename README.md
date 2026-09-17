@@ -44,38 +44,48 @@ npm run dev
 └── app/
     └── frontend/
         ├── public/
-        │   └── stories/        ← Story data in YAML format
+        │   └── stories/        ← Story data in JSON format
         ├── src/
         │   ├── main.tsx
         │   ├── App.tsx         ← Main application & inline components
         │   ├── index.css       ← Design system & styles
-        │   ├── data/           ← YAML data loader
+        │   ├── data/           ← JSON data loader
         │   └── components/     ← Shared React components (D3 Graph)
 ```
 
 ---
 
-## 📊 Data Schema (YAML)
+## 📊 Data Schema (JSON)
 
-```yaml
-# characters.yaml
-characters:
-  - id: "char-id"
-    name: "Character Name"
-    role: "Role/Title"
-    color: "#hex-color"
-    description: "Brief bio"
-    chapters: ["ch-1"]
+```json
+// characters.json
+{
+  "characters": [
+    {
+      "id": "char-id",
+      "name": "Character Name",
+      "role": "Role/Title",
+      "color": "#hex-color",
+      "description": "Brief bio",
+      "chapters": ["ch-1"]
+    }
+  ]
+}
 
-# chapters.yaml
-chapters:
-  - id: "ch-1"
-    timeline: 1
-    title: "தலைப்பு (Tamil)"
-    titleEn: "Title (English)"
-    location: "Setting"
-    characters: ["char-id"]
-    content: "Full story content in Tamil..."
+// chapters.json
+{
+  "chapters": [
+    {
+      "id": "ch-1",
+      "timeline": 1,
+      "title": "தலைப்பு (Tamil)",
+      "titleEn": "Title (English)",
+      "location": "Setting",
+      "characters": ["char-id"],
+      "content": "Full story content in Tamil..."
+    }
+  ]
+}
 ```
 
 ---
@@ -87,7 +97,7 @@ chapters:
 | Frontend Framework | React 18 + TypeScript |
 | Graph Visualization | D3.js (Force Simulation) |
 | Search | Fuse.js (client-side fuzzy search) |
-| Data Format | YAML (js-yaml) |
+| Data Format | JSON (native fetch) |
 | Build Tool | Vite 5 |
 | Styling | Vanilla CSS (Dark Fantasy design) |
 | Fonts | Inter + Cinzel + Noto Sans Tamil |
