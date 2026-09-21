@@ -23,6 +23,7 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
   const [pan, setPan] = useState({ x: 20, y: 30 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const touchStartRef = useRef<{ x: number; y: number; dist?: number }>({ x: 0, y: 0 });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 

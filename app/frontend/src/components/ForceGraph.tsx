@@ -95,6 +95,7 @@ export default function ForceGraph({
     list.push(amudhanPos);
 
     // 2. Surround 7 Characters with Equal Angular Steps (360 / 7 = 51.4 degrees)
+    surroundingChars.forEach((char, idx) => {
       const ORBIT_RADIUS = idx % 2 === 0 ? 250 : 370;
       const totalSurrounding = surroundingChars.length;
 
