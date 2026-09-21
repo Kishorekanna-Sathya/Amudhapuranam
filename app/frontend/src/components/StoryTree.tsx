@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import type { Chapter, Character } from "../data/jsonLoader";
-import { ZoomIn, ZoomOut, RefreshCw, GitFork, BookOpen } from "lucide-react";
+import { ZoomIn, ZoomOut, RefreshCw, GitFork, BookOpen, ChevronRight, X, ExternalLink } from "lucide-react";
 
 interface Props {
   chapters: Chapter[];
@@ -19,19 +19,29 @@ interface NodePosition {
 
 export default function StoryTree({ chapters, characters, onSelectChapter }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(0.9);
+  const [zoom, setZoom] = useState(0.85);
   const [pan, setPan] = useState({ x: 20, y: 30 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  // Touch tracking for mobile
-  const touchStartRef = useRef<{ x: number; y: number; dist?: number }>({ x: 0, y: 0 });
+  // Responsive mobile state
+  const [isMobile, setIsMobile] = useState<boolean>(
+    () => typeof window !== "undefined" && window.innerWidth < 860
+  );
 
-  const NODE_WIDTH = 270;
-  const NODE_HEIGHT = 155;
-  const LEVEL_GAP = 100; // Vertical distance between generations (levels)
-  const COL_GAP = 36;    // Horizontal distance between sibling nodes in same generation
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 860);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Responsive Node & Layout dimensions
+  const NODE_WIDTH = isMobile ? 120 : 270;
+  const NODE_HEIGHT = isMobile ? 70 : 155;
+  const LEVEL_GAP = isMobile ? 70 : 100;
+  const COL_GAP = isMobile ? 20 : 36;
 
   // Compute vertical multi-parent DAG hierarchy layout
   const { nodes, links, canvasWidth, canvasHeight } = useMemo(() => {
@@ -88,16 +98,16 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
     const levelWidths = levels.map(
       (lvl) => lvl.length * NODE_WIDTH + Math.max(0, lvl.length - 1) * COL_GAP
     );
-    const maxLevelWidth = Math.max(...levelWidths, 800);
-    const totalCanvasWidth = maxLevelWidth + 160;
-    const totalCanvasHeight = levels.length * (NODE_HEIGHT + LEVEL_GAP) + 200;
+    const maxLevelWidth = Math.max(...levelWidths, isMobile ? 300 : 800);
+    const totalCanvasWidth = maxLevelWidth + (isMobile ? 40 : 160);
+    const totalCanvasHeight = levels.length * (NODE_HEIGHT + LEVEL_GAP) + (isMobile ? 60 : 200);
 
     // Calculate (X, Y) layout positions for each node (Vertical: Level = Y, Column = X)
     const nodePositions: NodePosition[] = [];
     const nodePosMap = new Map<string, NodePosition>();
 
     levels.forEach((lvlChapters, lvlIndex) => {
-      const y = 40 + lvlIndex * (NODE_HEIGHT + LEVEL_GAP);
+      const y = (isMobile ? 24 : 40) + lvlIndex * (NODE_HEIGHT + LEVEL_GAP);
       const lvlWidth = levelWidths[lvlIndex];
       const startX = (totalCanvasWidth - lvlWidth) / 2;
 
@@ -154,16 +164,32 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
       canvasWidth: totalCanvasWidth,
       canvasHeight: totalCanvasHeight,
     };
-  }, [chapters]);
+  }, [chapters, isMobile, NODE_WIDTH, NODE_HEIGHT, LEVEL_GAP, COL_GAP]);
 
-  // Center view on mount / resize
+  // Center view on mount / resize / mobile toggle / tab change
+  const centerTree = () => {
+    if (!containerRef.current) return;
+    const containerW = containerRef.current.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 390);
+    if (containerW <= 0) return;
+    const calcZoom = isMobile
+      ? Math.min(1.0, Math.max(0.6, (containerW - 24) / canvasWidth))
+      : 0.85;
+    setZoom(calcZoom);
+    const initialPanX = (containerW - canvasWidth * calcZoom) / 2;
+    // On mobile, toolbar is ~56px — offset pan.y so first row of nodes is visible below it
+    const topOffset = isMobile ? 70 : 30;
+    setPan({ x: Math.round(initialPanX), y: topOffset });
+  };
+
   useEffect(() => {
-    if (containerRef.current) {
-      const containerW = containerRef.current.clientWidth;
-      const initialPanX = Math.max(16, (containerW - canvasWidth * zoom) / 2);
-      setPan({ x: initialPanX, y: 30 });
-    }
-  }, [canvasWidth]);
+    centerTree();
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      centerTree();
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [canvasWidth, isMobile]);
 
   // Mouse pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -217,33 +243,44 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
   };
 
   const resetView = () => {
-    const containerW = containerRef.current?.clientWidth || 800;
-    const initialPanX = Math.max(16, (containerW - canvasWidth * 0.9) / 2);
-    setZoom(0.9);
-    setPan({ x: initialPanX, y: 30 });
+    centerTree();
   };
 
-  // Determine highlighted links/nodes on hover
+  // Determine active node for highlights
+  const activeId = hoveredNodeId || selectedNodeId;
+
   const activeLinkIds = useMemo(() => {
-    if (!hoveredNodeId) return new Set<string>();
+    if (!activeId) return new Set<string>();
     const set = new Set<string>();
     links.forEach((l) => {
-      if (l.sourceId === hoveredNodeId || l.targetId === hoveredNodeId) {
+      if (l.sourceId === activeId || l.targetId === activeId) {
         set.add(l.id);
       }
     });
     return set;
-  }, [hoveredNodeId, links]);
+  }, [activeId, links]);
 
   const activeNodeIds = useMemo(() => {
-    if (!hoveredNodeId) return new Set<string>();
-    const set = new Set<string>([hoveredNodeId]);
+    if (!activeId) return new Set<string>();
+    const set = new Set<string>([activeId]);
     links.forEach((l) => {
-      if (l.sourceId === hoveredNodeId) set.add(l.targetId);
-      if (l.targetId === hoveredNodeId) set.add(l.sourceId);
+      if (l.sourceId === activeId) set.add(l.targetId);
+      if (l.targetId === activeId) set.add(l.sourceId);
     });
     return set;
-  }, [hoveredNodeId, links]);
+  }, [activeId, links]);
+
+  const selectedNode = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return nodes.find((n) => n.chapter.id === selectedNodeId) || null;
+  }, [selectedNodeId, nodes]);
+
+  const selectedNodeChars = useMemo(() => {
+    if (!selectedNode) return [];
+    return (selectedNode.chapter.characters || [])
+      .map((cid) => characters.find((c) => c.id === cid))
+      .filter(Boolean) as Character[];
+  }, [selectedNode, characters]);
 
   return (
     <div className="story-tree-wrapper">
@@ -255,7 +292,7 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
             <span>STORY HIERARCHY TREE</span>
           </div>
           <div className="tree-subtitle">
-            Vertical dependency flow · Tap or click node to read story
+            {isMobile ? "Tap node to inspect story & characters" : "Vertical dependency flow · Tap or click node to read story"}
           </div>
         </div>
 
@@ -366,6 +403,7 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
           <div className="tree-nodes-layer">
             {nodes.map((node) => {
               const ch = node.chapter;
+              const isSelected = selectedNodeId === ch.id;
               const isHovered = hoveredNodeId === ch.id;
               const isConnected = activeNodeIds.has(ch.id);
 
@@ -376,7 +414,7 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
               return (
                 <div
                   key={ch.id}
-                  className={`tree-node-card ${isHovered ? "hovered" : ""} ${isConnected ? "connected" : ""}`}
+                  className={`tree-node-card ${isMobile ? "mobile-node" : ""} ${isHovered ? "hovered" : ""} ${isSelected ? "selected" : ""} ${isConnected ? "connected" : ""}`}
                   style={{
                     left: `${node.x}px`,
                     top: `${node.y}px`,
@@ -385,51 +423,120 @@ export default function StoryTree({ chapters, characters, onSelectChapter }: Pro
                   }}
                   onMouseEnter={() => setHoveredNodeId(ch.id)}
                   onMouseLeave={() => setHoveredNodeId(null)}
-                  onClick={() => onSelectChapter(ch)}
+                  onClick={() => {
+                    setSelectedNodeId(ch.id);
+                    if (!isMobile) onSelectChapter(ch);
+                  }}
                 >
-                  <div className="node-card-inner">
-                    <div className="node-header">
-                      <span className="node-gen-badge">
-                        {node.level === 0 ? "★ ROOT STORY" : `GEN ${node.level}`}
-                      </span>
-                      {ch.location && <span className="node-location">{ch.location}</span>}
+                  {isMobile ? (
+                    <div className="st-mobile-node-inner">
+                      <div className="st-mn-top">
+                        <span className="st-mn-badge">
+                          {node.level === 0 ? "ROOT" : `G${node.level}`}
+                        </span>
+                        {/* Anchor read icon button right on node */}
+                        <button
+                          className="st-mn-anchor-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectChapter(ch);
+                          }}
+                          title="Read Story"
+                        >
+                          <BookOpen size={11} />
+                        </button>
+                      </div>
+                      <div className="st-mn-title">{ch.title}</div>
                     </div>
-
-                    <div className="node-title-tamil">{ch.title}</div>
-                    <div className="node-title-en">{ch.titleEn}</div>
-
-                    <div className="node-footer">
-                      <div className="node-chars">
-                        {charList.slice(0, 3).map((c) => (
-                          <span
-                            key={c.id}
-                            className="node-char-pill"
-                            style={{
-                              background: c.color + "1A",
-                              borderColor: c.color + "55",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: c.color, marginRight: 4 }} />
-                            {c.name}
-                          </span>
-                        ))}
-                        {charList.length > 3 && (
-                          <span className="node-char-more">+{charList.length - 3}</span>
-                        )}
+                  ) : (
+                    <div className="node-card-inner">
+                      <div className="node-header">
+                        <span className="node-gen-badge">
+                          {node.level === 0 ? "★ ROOT STORY" : `GEN ${node.level}`}
+                        </span>
+                        {ch.location && <span className="node-location">{ch.location}</span>}
                       </div>
 
-                      <div className="node-action">
-                        <BookOpen size={14} />
+                      <div className="node-title-tamil">{ch.title}</div>
+                      <div className="node-title-en">{ch.titleEn}</div>
+
+                      <div className="node-footer">
+                        <div className="node-chars">
+                          {charList.slice(0, 3).map((c) => (
+                            <span
+                              key={c.id}
+                              className="node-char-pill"
+                              style={{
+                                background: c.color + "1A",
+                                borderColor: c.color + "55",
+                                color: "var(--text-primary)",
+                              }}
+                            >
+                              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: c.color, marginRight: 4 }} />
+                              {c.name}
+                            </span>
+                          ))}
+                          {charList.length > 3 && (
+                            <span className="node-char-more">+{charList.length - 3}</span>
+                          )}
+                        </div>
+
+                        <div className="node-action" onClick={(e) => { e.stopPropagation(); onSelectChapter(ch); }}>
+                          <BookOpen size={14} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Mobile Inspector Drawer Sheet when node is selected */}
+      {isMobile && selectedNode && (
+        <div className="st-mobile-inspector-sheet">
+          <div className="st-sms-drag" />
+          <div className="st-sms-header">
+            <div className="st-sms-badge">
+              {selectedNode.level === 0 ? "★ ROOT STORY" : `GEN ${selectedNode.level}`}
+            </div>
+            {selectedNode.chapter.location && (
+              <div className="st-sms-location">{selectedNode.chapter.location}</div>
+            )}
+            <button className="st-sms-close" onClick={() => setSelectedNodeId(null)} aria-label="Close inspector">
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="st-sms-title-tamil">{selectedNode.chapter.title}</div>
+          <div className="st-sms-title-en">{selectedNode.chapter.titleEn}</div>
+
+          {selectedNodeChars.length > 0 && (
+            <>
+              <div className="st-sms-sec-label">FEATURED CHARACTERS</div>
+              <div className="st-sms-chars">
+                {selectedNodeChars.map((c) => (
+                  <span key={c.id} className="st-sms-char-pill" style={{ borderColor: c.color, color: "var(--text-primary)" }}>
+                    <span className="st-sms-char-dot" style={{ background: c.color }} />
+                    {c.name}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          <button
+            className="st-sms-read-btn"
+            onClick={() => onSelectChapter(selectedNode.chapter)}
+          >
+            <BookOpen size={16} />
+            <span>READ STORY</span>
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

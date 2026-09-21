@@ -23,8 +23,9 @@ export interface Relationship {
   id: string;
   source: string;
   target: string;
-  type: "family" | "alliance" | "conflict";
+  type: string;
   label: string;
+  description?: string;
 }
 
 export interface StoryData {

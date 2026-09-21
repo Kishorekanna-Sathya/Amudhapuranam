@@ -25,6 +25,8 @@ const REL_COLORS: Record<string, { color: string; label: string }> = {
   friend: { color: "#f5d233", label: "Friends" },
   alliance: { color: "#2ce6cc", label: "Love Interest" },
   family: { color: "#e87fcc", label: "Siblings" },
+  parent: { color: "#F5A623", label: "Parents" },
+  marriage: { color: "#FD79A8", label: "Husband & Wife" },
   conflict: { color: "#ff5555", label: "Butterfly Effect" },
   default: { color: "#4895d4", label: "Relationship" },
 };
@@ -38,6 +40,9 @@ const CHARACTER_INITIALS: Record<string, string> = {
   raghavi: "RG",
   jeya: "JY",
   pallavi: "PL",
+  mom: "SV",
+  dad: "SN",
+  kayal: "KY",
 };
 
 export default function ForceGraph({
@@ -90,10 +95,9 @@ export default function ForceGraph({
     list.push(amudhanPos);
 
     // 2. Surround 7 Characters with Equal Angular Steps (360 / 7 = 51.4 degrees)
-    const ORBIT_RADIUS = 270;
-    const totalSurrounding = surroundingChars.length;
+      const ORBIT_RADIUS = idx % 2 === 0 ? 250 : 370;
+      const totalSurrounding = surroundingChars.length;
 
-    surroundingChars.forEach((char, idx) => {
       // Start at North (-pi/2) and step clockwise
       const angle = -Math.PI / 2 + (idx * (2 * Math.PI)) / totalSurrounding;
       const cx = CENTER_X + ORBIT_RADIUS * Math.cos(angle);
@@ -314,6 +318,22 @@ export default function ForceGraph({
                 Siblings
               </button>
               <button
+                className={`hud-pill ${activeRelFilter === "parent" ? "active" : ""}`}
+                style={{ "--pill-color": "#F5A623" } as React.CSSProperties}
+                onClick={() => setActiveRelFilter(activeRelFilter === "parent" ? null : "parent")}
+              >
+                <span className="pill-dot" style={{ background: "#F5A623" }} />
+                Parents
+              </button>
+              <button
+                className={`hud-pill ${activeRelFilter === "marriage" ? "active" : ""}`}
+                style={{ "--pill-color": "#FD79A8" } as React.CSSProperties}
+                onClick={() => setActiveRelFilter(activeRelFilter === "marriage" ? null : "marriage")}
+              >
+                <span className="pill-dot" style={{ background: "#FD79A8" }} />
+                Married
+              </button>
+              <button
                 className={`hud-pill ${activeRelFilter === "conflict" ? "active" : ""}`}
                 style={{ "--pill-color": "#ff5555" } as React.CSSProperties}
                 onClick={() => setActiveRelFilter(activeRelFilter === "conflict" ? null : "conflict")}
@@ -425,32 +445,42 @@ export default function ForceGraph({
                         strokeWidth={isHighlighted ? 2.5 : 1.8}
                         strokeDasharray={relType === "conflict" ? "6,4" : undefined}
                         markerEnd={`url(#arr-${relType in REL_COLORS ? relType : "default"})`}
+                        style={{ pointerEvents: "none" }}
                       />
 
-                      {/* Relationship Midpoint Pill Label */}
-                      <g transform={`translate(${link.midX}, ${link.midY})`}>
-                        <rect
-                          x={-link.label.length * 3.6 - 10}
-                          y={-11}
-                          width={link.label.length * 7.2 + 20}
-                          height={22}
-                          rx={11}
-                          fill="rgba(12, 10, 26, 0.94)"
-                          stroke={relColor}
-                          strokeWidth={1}
-                          strokeOpacity={isHighlighted ? 0.9 : 0.45}
-                        />
-                        <text
-                          fill={relColor}
-                          fontSize="10"
-                          fontWeight="700"
-                          fontFamily="var(--font-ui)"
-                          textAnchor="middle"
-                          dy="0.35em"
+                      {/* Relationship Midpoint Pill Label — shown when link is highlighted or filtered */}
+                      {(isHighlighted || (activeRelFilter && relType === activeRelFilter)) && (
+                        <g
+                          transform={`translate(${link.midX}, ${link.midY})`}
+                          style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedChar(link.targetNode.character);
+                          }}
                         >
-                          {link.label}
-                        </text>
-                      </g>
+                          <rect
+                            x={-link.label.length * 3.6 - 10}
+                            y={-11}
+                            width={link.label.length * 7.2 + 20}
+                            height={22}
+                            rx={11}
+                            fill="rgba(12, 10, 26, 0.94)"
+                            stroke={relColor}
+                            strokeWidth={1}
+                            strokeOpacity={isHighlighted ? 0.9 : 0.45}
+                          />
+                          <text
+                            fill={relColor}
+                            fontSize="10"
+                            fontWeight="700"
+                            fontFamily="var(--font-ui)"
+                            textAnchor="middle"
+                            dy="0.35em"
+                          >
+                            {link.label}
+                          </text>
+                        </g>
+                      )}
                     </g>
                   );
                 })}
@@ -496,8 +526,17 @@ export default function ForceGraph({
                       }}
                       onMouseEnter={() => setHoveredCharId(char.id)}
                       onMouseLeave={() => setHoveredCharId(null)}
-                      onClick={() => setSelectedChar(char)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedChar(char);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        setSelectedChar(char);
+                      }}
                     >
+                      {/* Invisible expanded touch hit target */}
+                      <circle cx={pos.cx} cy={pos.cy} r={pos.r + 20} fill="transparent" style={{ cursor: "pointer" }} />
                       {/* Outer Glow Ring on Hover or Selection */}
                       {(isHovered || isSelected || pos.isHero) && (
                         <circle
@@ -642,6 +681,7 @@ export default function ForceGraph({
                       key={rel.id}
                       className="rel-item-pill"
                       onClick={() => setSelectedChar(otherChar)}
+                      title={rel.description || `${otherChar.name} (${rel.label})`}
                     >
                       <span className="rel-dot" style={{ background: relConfig.color }} />
                       <span className="rel-target-name">{otherChar.name}</span>

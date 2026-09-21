@@ -1128,8 +1128,10 @@
      CHAPTER MODAL — Premium editorial / documentary read view
      ══════════════════════════════════════════════════════════════════ */
   .chapter-modal {
-    @apply fixed inset-0 z-[400] flex items-center justify-center px-8 py-12;
+    @apply fixed inset-0 z-[1000] flex items-center justify-center px-8 py-12;
     background: var(--modal-bg);
+    backdrop-filter: var(--mac-blur);
+    -webkit-backdrop-filter: var(--mac-blur);
     animation: fadeIn 0.2s ease;
   }
   @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
@@ -1911,8 +1913,10 @@
   /* ── Bottom nav — visible ── */
   .bottom-nav     { display: block; }
 
-  /* ── Main area — account for bottom nav ── */
-  .main-area { bottom: 56px; }
+  /* ── Main area — flex fills space between header and bottom nav ── */
+  .main-area {
+    /* flex child inside .app-shell flex-column; stays positioned under header */
+  }
 
   /* ── Timeline — tighter padding ── */
   .timeline-view {
@@ -2498,27 +2502,248 @@
   transform: scale(1.15);
 }
 
-@media (max-width: 640px) {
+/* Mobile node badge styling for StoryTree */
+.tree-node-card.mobile-node {
+  border-radius: 12px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-default);
+}
+
+.tree-node-card.mobile-node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-bg), 0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: scale(1.06);
+  z-index: 50;
+}
+
+.st-mobile-node-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.st-mn-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.st-mn-badge {
+  font-family: var(--font-ui);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.st-mn-anchor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.st-mn-anchor-btn:active {
+  transform: scale(0.9);
+  background: var(--accent);
+  color: #fff;
+}
+
+.st-mn-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* Mobile Inspector Sheet for StoryTree */
+.st-mobile-inspector-sheet {
+  position: fixed;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  z-index: 400;
+  background: var(--glass-bg);
+  backdrop-filter: var(--mac-blur);
+  -webkit-backdrop-filter: var(--mac-blur);
+  border-top: 1px solid var(--border-strong);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 20px 32px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+  animation: stSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: calc(82vh - 60px);
+  overflow-y: auto;
+}
+
+@keyframes stSlideUp {
+  from { transform: translateY(120%); }
+  to { transform: translateY(0); }
+}
+
+.st-sms-drag {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  margin: 0 auto 12px;
+}
+
+.st-sms-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.st-sms-badge {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-line);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.st-sms-location {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.st-sms-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.st-sms-title-tamil {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.st-sms-title-en {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.st-sms-sec-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.st-sms-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.st-sms-char-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid;
+}
+
+.st-sms-char-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.st-sms-read-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 16px var(--accent-bg);
+}
+
+.st-sms-read-btn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 860px) {
   .tree-toolbar {
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    flex-direction: column;
-    align-items: flex-start;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
   }
   .tree-info {
-    width: 100%;
-    padding: 8px 12px;
+    padding: 6px 12px;
+    border-radius: 10px;
   }
   .tree-title {
-    font-size: 13px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
   }
   .tree-subtitle {
-    font-size: 10px;
+    display: none;
   }
   .tree-controls {
-    align-self: flex-end;
+    align-self: auto;
+    gap: 6px;
+  }
+  .tree-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 }
 
@@ -2553,7 +2778,9 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  right: 16px;
+  /* On desktop: only span the canvas column, not the full shell width.
+     ct-side panel is ~340px, so right offset leaves room for it. */
+  right: calc(340px + 16px);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -2628,10 +2855,14 @@
   border-color: var(--border-strong);
 }
 .ct-pill.active {
-  color: var(--text-primary);
-  background: var(--accent-bg);
+  color: #ffffff;
+  background: var(--pc, var(--accent));
   border-color: var(--pc, var(--accent));
   font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.ct-pill.active .ct-pill-dot {
+  background: #ffffff !important;
 }
 .ct-pill-dot {
   width: 7px;
@@ -2935,15 +3166,74 @@
 
 /* ── Mobile responsive ── */
 @media (max-width: 860px) {
+  /* Shell stays full-height absolute, just stacks children vertically: hud on top, canvas below */
   .ct-shell {
     flex-direction: column;
-    position: relative;
+    /* keep position: absolute + inset: 0 from base so it fills the view */
   }
 
-  /* Canvas fills all available space */
+  /* HUD: in flex-column shell, it stacks above the canvas naturally.
+     Override position: absolute so it participates in flow. */
+  .ct-hud {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    border-radius: 0;
+    padding: 6px 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+    border-radius: 0;
+  }
+
+  /* Hide decorative brand — bottom nav already shows context */
+  .ct-hud-brand {
+    display: none;
+  }
+
+  .ct-hud-badge {
+    display: none;
+  }
+
+  /* Filter pills: single horizontal scrollable row, no wrap */
+  .ct-filter-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 2px 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ct-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ct-pill {
+    flex-shrink: 0;
+    padding: 4px 11px;
+    font-size: 11px;
+  }
+
+  /* Canvas fills remaining space below the HUD */
   .ct-canvas-col {
     flex: 1;
     min-height: 0;
+    overflow: hidden;
   }
 
   /* Panel toggle button visible on mobile, positioned above bottom nav */
@@ -2954,59 +3244,38 @@
     z-index: 310;
   }
 
-  /* Hint bar hidden on mobile (panel toggle replaces it) */
+  /* Hint bar hidden on mobile */
   .ct-hint {
     display: none;
   }
 
   /* Side panel: slides up from bottom as a sheet */
   .ct-side {
-    position: absolute;
-    bottom: 0;
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom));
     left: 0;
     right: 0;
     width: 100%;
-    height: 70vh;
-    max-height: 70vh;
+    height: auto;
+    max-height: calc(82vh - 60px);
     border-left: none;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
-    transform: translateY(100%);
+    border-top: 1px solid var(--border-strong);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -6px 32px rgba(0,0,0,0.5);
+    transform: translateY(120%);
     transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 100;
-    /* keep flex layout but hide until open */
+    z-index: 400;
     overflow-y: auto;
+    padding-bottom: 28px;
   }
 
   .ct-side.open {
     transform: translateY(0);
   }
 
-  /* HUD adapts for small screens */
-  .ct-hud {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 12px;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-  }
-
-  .ct-hud-badge {
-    display: none;
-  }
-
-  .ct-filter-row {
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 2px;
-  }
-
-  /* SVG canvas padding adjusted for smaller HUD */
+  /* SVG canvas: no absolute HUD any more, no extra top padding needed */
   .ct-svg-wrap {
-    padding-top: 72px;
+    padding-top: 12px;
     padding-bottom: 60px;
   }
 }
@@ -3446,18 +3715,51 @@
     flex-direction: column;
   }
   .sigma-side-panel {
-    width: 100%;
-    height: 320px;
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: none; /* inspector shown via touch tap inspector sheet */
   }
+  /* Compact single-row HUD: hide title, show only scrollable filter pills */
   .sigma-hud-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 6px 10px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    border-radius: 10px;
+  }
+  .hud-title-wrap {
+    display: none;
+  }
+  .hud-tools {
+    flex-shrink: 0;
+    gap: 4px;
+  }
+  .hud-tool-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
   }
   .hud-filter-group {
-    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 6px;
+  }
+  .hud-filter-group::-webkit-scrollbar {
+    display: none;
+  }
+  .hud-pill {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    font-size: 10px;
   }
   .sigma-bottom-bar {
     display: none;

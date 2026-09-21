@@ -297,7 +297,7 @@ export default function App() {
         </div>
 
         {/* Characters Tree View */}
-        <div className="graph-view" style={{ display: view === "graph" ? "flex" : "none", flexDirection: "column" }}>
+        <div className="graph-view" style={{ display: view === "graph" ? "block" : "none", position: "absolute", inset: 0 }}>
           <CharacterTree
             characters={data.characters} chapters={data.chapters} relationships={data.relationships}
             editMode={false} searchHighlightIds={[]}

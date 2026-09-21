@@ -5,56 +5,77 @@
       "name": "Amudhan",
       "role": "Protagonist",
       "color": "#C4552F",
-      "description": "Protagonist of the story."
+      "description": "The central protagonist of Amudhapuranam whose life journey, deep emotional bonds, and fateful encounters drive the narrative."
     },
     {
       "id": "vasu",
       "name": "Vasu",
-      "role": "Friend",
+      "role": "Best Friend",
       "color": "#6C5CE7",
-      "description": "Protagonist's Friend."
+      "description": "Amudhan's loyal childhood best friend and confidant who stands by him through every personal and emotional milestone."
     },
     {
       "id": "ezhil",
       "name": "Ezhilan",
-      "role": "Savior",
+      "role": "Savior & Aviator",
       "color": "#2980B9",
-      "description": "Pilot Aspirant."
+      "description": "An ambitious pilot aspirant with a high sense of duty, honor, and courage whose path unexpectedly rescues and redirects Amudhan's life."
     },
     {
       "id": "raghavi",
       "name": "Raghavi",
-      "role": "",
+      "role": "Ezhilan's Partner",
       "color": "#8E44AD",
-      "description": "Ezhilan's Girl Friend."
+      "description": "Ezhilan's supportive romantic partner who provides emotional strength and stability during critical turning points."
     },
     {
       "id": "jeya",
       "name": "Jeyanthi",
-      "role": "",
+      "role": "Sister",
       "color": "#27AE60",
-      "description": "Vasu's Sister, Amudhan's Too"
+      "description": "Vasu's sister, loved like family by Amudhan as well, serving as a bright, caring pillar within their close-knit circle."
     },
     {
       "id": "valli",
       "name": "Valli",
-      "role": "Amudhan Love",
+      "role": "First Love",
       "color": "#16A085",
-      "description": "Amudhan's First Love. \n Vasu's Neighbourhood. \n Jeys's Friend"
+      "description": "Amudhan's initial emotional connection and first crush—a neighbor and close friend of Jeyanthi who shaped his youth."
     },
     {
       "id": "pallavi",
       "name": "Pallavi",
-      "role": "",
+      "role": "Classmate",
       "color": "#2575FC",
-      "description": "Amudhan and Vasu's Classmate. \n Vasu's Love Interest"
+      "description": "Classmate of Amudhan and Vasu, whose charming presence sparks romantic feelings in Vasu and creates engaging group dynamics."
     },
     {
       "id": "vennila",
       "name": "Vennila",
-      "role": "Amudhans Love",
+      "role": "Primary Love Interest",
       "color": "#D35400",
-      "description": "Amudhan's First Relationship."
+      "description": "Amudhan's first major romantic relationship—a deeply affection-filled and transformative chapter of his early adulthood."
+    },
+    {
+      "id": "mom",
+      "name": "Sevvandhi",
+      "role": "Amudhan's Mother",
+      "color": "#E84393",
+      "description": "Amudhan's loving mother, offering unconditional warmth, wisdom, and traditional care to anchor the family."
+    },
+    {
+      "id": "dad",
+      "name": "Sivanaindhaan",
+      "role": "Amudhan's Father",
+      "color": "#4B6584",
+      "description": "Amudhan's steadfast and hardworking father, acting as the quiet strength, moral pillar, and provider for the household."
+    },
+    {
+      "id": "kayal",
+      "name": "Kayal",
+      "role": "Amudhan's Sister",
+      "color": "#FD79A8",
+      "description": "Amudhan's beloved younger sister, whose gentle presence and early loss."
     }
   ]
 }

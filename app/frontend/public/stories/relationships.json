@@ -5,84 +5,144 @@
       "source": "amudhan",
       "target": "vasu",
       "type": "friend",
-      "label": "Friends"
+      "label": "Best Friends",
+      "description": "Childhood best friends sharing an unshakeable lifelong bond through all life milestones."
     },
     {
       "id": "r2",
       "source": "vasu",
       "target": "jeya",
       "type": "family",
-      "label": "Siblings"
+      "label": "Siblings",
+      "description": "Brother and sister with a deeply caring and protective family bond."
     },
     {
       "id": "r3",
       "source": "jeya",
       "target": "valli",
       "type": "friend",
-      "label": "Friends"
+      "label": "Neighborhood Friends",
+      "description": "Close friends who share daily moments, secrets, and warmth in their shared neighborhood."
     },
     {
       "id": "r4",
       "source": "ezhil",
       "target": "raghavi",
-      "type": "Alliance",
-      "label": "Love"
+      "type": "alliance",
+      "label": "Partners",
+      "description": "Devoted romantic relationship offering mutual support as Ezhilan pursues his aviation career."
     },
     {
       "id": "r5",
       "source": "amudhan",
       "target": "valli",
-      "type": "Alliance",
-      "label": "Love Interest"
+      "type": "alliance",
+      "label": "First Love",
+      "description": "Amudhan's nostalgic early romance and childhood crush."
     },
     {
       "id": "r6",
       "source": "amudhan",
       "target": "ezhil",
-      "type": "Conflict",
-      "label": "Butterfly Effect"
+      "type": "conflict",
+      "label": "Butterfly Effect",
+      "description": "Cannon Event."
     },
     {
       "id": "r7",
       "source": "amudhan",
       "target": "pallavi",
       "type": "friend",
-      "label": "Friends"
+      "label": "Classmates",
+      "description": "Schoolmates who share friendly memories and mutual peer connections."
     },
     {
-      "id": "r10",
+      "id": "r8",
       "source": "vasu",
       "target": "pallavi",
-      "type": "Alliance",
-      "label": "Love Interest"
+      "type": "alliance",
+      "label": "Love Interest",
+      "description": "Vasu holds a secret affection for Pallavi, which inspires his personal journey."
     },
     {
       "id": "r9",
       "source": "amudhan",
       "target": "vennila",
-      "type": "Alliance",
-      "label": "Love"
+      "type": "alliance",
+      "label": "First Relationship",
+      "description": "Amudhan's first serious romantic relationship, bringing deep emotional warmth and character growth."
     },
     {
       "id": "r10",
       "source": "vasu",
       "target": "valli",
       "type": "friend",
-      "label": "Friends"
+      "label": "Neighbors",
+      "description": "Friendly neighbors who grew up together in the same locality."
     },
     {
       "id": "r11",
       "source": "pallavi",
       "target": "vennila",
-      "type": "Senior",
-      "label": "School Mates"
+      "type": "friend",
+      "label": "School Mates",
+      "description": "Schoolmates connected through shared academic background and mutual friends."
     },
     {
       "id": "r12",
       "source": "vennila",
       "target": "vasu",
-      "type": "Junir",
-      "label": "School Mates"
+      "type": "friend",
+      "label": "School Mates",
+      "description": "Schoolmates linked through Amudhan's circle and shared school environment."
+    },
+    {
+      "id": "r13",
+      "source": "amudhan",
+      "target": "mom",
+      "type": "parent",
+      "label": "Mother & Son",
+      "description": "Sevvandhi nurtures Amudhan with unwavering love, motherly guidance, and cultural wisdom."
+    },
+    {
+      "id": "r14",
+      "source": "amudhan",
+      "target": "dad",
+      "type": "parent",
+      "label": "Father & Son",
+      "description": "Sivanaindhaan hold broken connection with Amudhan."
+    },
+    {
+      "id": "r15",
+      "source": "mom",
+      "target": "dad",
+      "type": "marriage",
+      "label": "Husband & Wife",
+      "description": "Sevvandhi and Sivanaindhaan form the marital relationship."
+    },
+    {
+      "id": "r16",
+      "source": "amudhan",
+      "target": "kayal",
+      "type": "family",
+      "label": "Siblings",
+      "description": "Kayal is Amudhan's beloved younger sister whose cherished memory stays forever in his heart."
+    },
+    {
+      "id": "r17",
+      "source": "mom",
+      "target": "kayal",
+      "type": "parent",
+      "label": "Mother & Daughter",
+      "description": "Sevvandhi is Kayal's loving mother who devotedly cared for her."
+    },
+    {
+      "id": "r18",
+      "source": "dad",
+      "target": "kayal",
+      "type": "parent",
+      "label": "Father & Daughter",
+      "description": "Sivanaindhaan is Kayal's affectionate father."
     }
   ]
 }
