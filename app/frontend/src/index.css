@@ -19,49 +19,52 @@
   /* ══════════════════════════════════════════════════════════════════
      LIGHT MODE (default :root)
      ══════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════════
+     LIGHT MODE (default :root)
+     ══════════════════════════════════════════════════════════════════ */
   :root {
     color-scheme: light;
 
     /* ── Semantic surface tokens ──────────────────────────────────── */
-    --page-bg:         #FAF6EE;   /* warm off-white paper */
-    --card-bg:         #FFFFFF;   /* pure white cards */
-    --card-bg-2:       #F7F2EA;   /* slightly tinted card for nested areas */
-    --card-bg-3:       #F0EAE0;   /* third surface tier */
+    --page-bg:         #FAF3E9;   /* warm paper background */
+    --card-bg:         #FFFFFF;   /* crisp white card surface sitting on paper background */
+    --card-bg-2:       #F3E8D8;   /* secondary warm surface tier */
+    --card-bg-3:       #C1665A;   /* cognac terracotta surface accent (#9E483F / #C1665A) */
 
     /* ── Text ────────────────────────────────────────────────────── */
-    --text-primary:    #22223A;   /* deep indigo-black */
-    --text-secondary:  #5A5A72;   /* muted indigo-gray */
-    --text-dim:        #8A8A9A;   /* very muted — hints, placeholders */
-    --text-xdim:       #B8B8C8;   /* barely visible — decorative */
+    --text-primary:    #8A5E00;   /* HIGHLIGHT FONT: deep golden bronze ochre */
+    --text-secondary:  #6E4A2E;   /* BASE FONT: warm cinnamon mocha brown */
+    --text-dim:        #9E7656;   /* dim text */
+    --text-xdim:       #C5A78B;   /* extra dim */
 
-    /* ── Accent (terracotta / rust) ──────────────────────────────── */
-    --accent:          #C4552F;
-    --accent-hover:    #A8431F;
-    --accent-dim:      #7A2E12;
-    --accent-light:    #E8917A;
-    --accent-bg:       rgba(196, 85, 47, 0.08);
-    --accent-line:     rgba(196, 85, 47, 0.25);
+    /* ── Accent (decorative only) ────────────────────────────────── */
+    --accent:          #EBA607;   /* DECORATIVE ACCENT: golden amber */
+    --accent-hover:    #D99700;
+    --accent-dim:      #B57D00;
+    --accent-light:    #FCE592;
+    --accent-bg:       rgba(235, 166, 7, 0.12);
+    --accent-line:     rgba(235, 166, 7, 0.35);
 
     /* ── Borders ─────────────────────────────────────────────────── */
-    --border-default:  #D8CBB0;   /* soft tan — card outlines & dividers */
-    --border-strong:   #C0B090;   /* slightly deeper for emphasis */
-    --border-accent:   #C4552F;   /* 2px only for featured/selected */
+    --border-default:  #E8D7C3;   /* soft tan divider */
+    --border-strong:   #C5A78B;   /* emphasis border */
+    --border-accent:   #EBA607;   /* golden accent border */
 
     /* ── Location color ──────────────────────────────────────────── */
-    --loc-color:       #5A7A52;   /* muted sage green — neutral for locations */
+    --loc-color:       #2E7D5B;   /* emerald green */
 
     /* ── Tag badge groups ────────────────────────────────────────── */
-    --tag-coral-bg:    #F3D2C0;
-    --tag-coral-text:  #7A2E12;
-    --tag-sage-bg:     #D0E5CC;
-    --tag-sage-text:   #2E5228;
-    --tag-lavender-bg: #D2D8EE;
-    --tag-lavender-text:#2A3560;
+    --tag-coral-bg:    #F8E0D8;
+    --tag-coral-text:  #9E483F;
+    --tag-sage-bg:     #D5EADF;
+    --tag-sage-text:   #1C523B;
+    --tag-lavender-bg: #F4E4C8;
+    --tag-lavender-text:#6E4A2E;
 
     /* ── Overlays & glass ────────────────────────────────────────── */
-    --modal-overlay:   rgba(34, 34, 58, 0.55);
-    --glass-bg:        rgba(255, 255, 255, 0.70);
-    --glass-border-c:  rgba(216, 203, 176, 0.60);
+    --modal-overlay:   rgba(110, 74, 46, 0.50);
+    --glass-bg:        rgba(250, 243, 233, 0.85);
+    --glass-border-c:  rgba(232, 215, 195, 0.75);
     --mac-blur:        blur(30px) saturate(160%);
 
     /* ── Fonts ───────────────────────────────────────────────────── */
@@ -72,7 +75,6 @@
 
     /* ══════════════════════════════════════════════════════════════
        BACKWARD-COMPAT ALIASES
-       (all existing component CSS references these — no changes needed there)
        ══════════════════════════════════════════════════════════════ */
     --canvas:          var(--page-bg);
     --surface:         var(--card-bg);
@@ -91,14 +93,13 @@
     --amber-light:     var(--accent-light);
     --amber-bg:        var(--accent-bg);
     --amber-line:      var(--accent-line);
-    --amber-glow:      rgba(196, 85, 47, 0.35);
+    --amber-glow:      rgba(235, 166, 7, 0.35);
 
-    /* Secondary accent — deep teal for locations/chapter tags */
     --cyan:            var(--loc-color);
-    --cyan-dim:        #3A6035;
-    --cyan-light:      #8ABD80;
-    --cyan-bg:         rgba(90, 122, 82, 0.10);
-    --cyan-line:       rgba(90, 122, 82, 0.25);
+    --cyan-dim:        #236045;
+    --cyan-light:      #5CB28A;
+    --cyan-bg:         rgba(46, 125, 91, 0.10);
+    --cyan-line:       rgba(46, 125, 91, 0.25);
 
     --pink:            var(--accent);
     --pink-dim:        var(--accent-dim);
@@ -106,28 +107,25 @@
     --pink-bg:         var(--accent-bg);
     --pink-line:       var(--accent-line);
 
-    --crimson:         #7A2E12;
-    --crimson-bg:      rgba(122, 46, 18, 0.10);
+    --crimson:         #C1665A;
+    --crimson-bg:      rgba(193, 102, 90, 0.12);
 
     --loc:             var(--loc-color);
     --modal-bg:        var(--modal-overlay);
     --glass:           var(--accent-bg);
     --glass-border:    var(--accent-line);
 
-    /* Mac-style glass for header/panels in light mode */
-    --mac-glass:       rgba(250, 246, 238, 0.82);
-    --mac-border:      rgba(216, 203, 176, 0.70);
+    --mac-glass:       rgba(250, 243, 233, 0.85);
+    --mac-border:      rgba(232, 215, 195, 0.75);
 
-    /* ForceGraph D3 aliases */
     --primary-600:     var(--accent);
     --secondary-600:   var(--loc-color);
-    --accent-600:      rgba(196, 85, 47, 0.50);
-    --text-300:        rgba(34, 34, 58, 0.30);
-    --text-400:        rgba(34, 34, 58, 0.50);
-    --text-600:        rgba(34, 34, 58, 0.80);
+    --accent-600:      rgba(235, 166, 7, 0.50);
+    --text-300:        rgba(138, 94, 0, 0.30);
+    --text-400:        rgba(138, 94, 0, 0.50);
+    --text-600:        rgba(138, 94, 0, 0.80);
 
-    /* Intro/tree canvas override (set to card surface in light mode) */
-    --canvas-deep:     #EDE8DE;
+    --canvas-deep:     #F3E8D8;
     --border-gold:     var(--border-default);
     --bg-abyss:        var(--page-bg);
     --font-heading:    var(--font-title);
@@ -140,43 +138,43 @@
   [data-theme="dark"] {
     color-scheme: dark;
 
-    --page-bg:         #1D1E2C;   /* deep indigo-night */
-    --card-bg:         #282A3D;   /* slightly lighter indigo */
-    --card-bg-2:       #30334A;
-    --card-bg-3:       #393C54;
+    /* Pantone 2350 U / P 14-9 U / P 14-8 C Dark Theme */
+    --page-bg:         #2C1715;   /* Deep Cognac Abyssal Background */
+    --card-bg:         #3D1E1B;   /* Cognac Card Surface (Pantone 2350 U base tone) */
+    --card-bg-2:       #4E2723;
+    --card-bg-3:       #9E483F;   /* Pantone 2350 U accent surface */
 
-    --text-primary:    #F5F0E6;   /* warm off-white */
-    --text-secondary:  #B0BEE8;   /* light lavender-blue */
-    --text-dim:        #7A88B8;
-    --text-xdim:       #4A5480;
+    --text-primary:    #EBA607;   /* HIGHLIGHT FONT: Pantone P 14-8 C (Golden Amber) */
+    --text-secondary:  #F0D5A5;   /* BASE FONT: Pantone P 14-9 U (Warm Cream Gold) */
+    --text-dim:        #C7AE85;
+    --text-xdim:       #998463;
 
-    --accent:          #F0916B;   /* warm coral-orange */
-    --accent-hover:    #F8A882;
-    --accent-dim:      #B06040;
-    --accent-light:    #FFCDB8;
-    --accent-bg:       rgba(240, 145, 107, 0.12);
-    --accent-line:     rgba(240, 145, 107, 0.30);
+    --accent:          #EBA607;   /* Golden Amber accent */
+    --accent-hover:    #FFBE1A;
+    --accent-dim:      #C28800;
+    --accent-light:    #FCE592;
+    --accent-bg:       rgba(235, 166, 7, 0.15);
+    --accent-line:     rgba(235, 166, 7, 0.35);
 
-    --border-default:  #3D4058;   /* muted indigo-gray */
-    --border-strong:   #4D5070;
-    --border-accent:   #F0916B;
+    --border-default:  #5E2F2B;
+    --border-strong:   #7E3B36;
+    --border-accent:   #EBA607;
 
-    --loc-color:       #8ABDA0;   /* soft sage-green for locations */
+    --loc-color:       #6ECB9A;
 
     /* Tag badge groups — dark mode */
-    --tag-coral-bg:    #F0916B;
-    --tag-coral-text:  #1D1E2C;
-    --tag-sage-bg:     #B8D6B2;
-    --tag-sage-text:   #1D1E2C;
-    --tag-lavender-bg: #B0BEE8;
-    --tag-lavender-text:#1D1E2C;
+    --tag-coral-bg:    #EBA607;
+    --tag-coral-text:  #2C1715;
+    --tag-sage-bg:     #4AA978;
+    --tag-sage-text:   #F0D5A5;
+    --tag-lavender-bg: #9E483F;
+    --tag-lavender-text:#F0D5A5;
 
-    --modal-overlay:   rgba(2, 2, 8, 0.85);
-    --glass-bg:        rgba(40, 42, 61, 0.85);
-    --glass-border-c:  rgba(61, 64, 88, 0.70);
+    --modal-overlay:   rgba(20, 10, 9, 0.88);
+    --glass-bg:        rgba(44, 23, 21, 0.88);
+    --glass-border-c:  rgba(94, 47, 43, 0.70);
     --mac-blur:        blur(30px) saturate(180%);
 
-    /* Backward-compat aliases — dark values */
     --canvas:          var(--page-bg);
     --surface:         var(--card-bg);
     --surface2:        var(--card-bg-2);
@@ -194,13 +192,13 @@
     --amber-light:     var(--accent-light);
     --amber-bg:        var(--accent-bg);
     --amber-line:      var(--accent-line);
-    --amber-glow:      rgba(240, 145, 107, 0.40);
+    --amber-glow:      rgba(235, 166, 7, 0.40);
 
     --cyan:            var(--loc-color);
-    --cyan-dim:        #5A8A70;
-    --cyan-light:      #C8E8D8;
-    --cyan-bg:         rgba(138, 189, 160, 0.12);
-    --cyan-line:       rgba(138, 189, 160, 0.28);
+    --cyan-dim:        #4AA978;
+    --cyan-light:      #A3E4C2;
+    --cyan-bg:         rgba(110, 203, 154, 0.15);
+    --cyan-line:       rgba(110, 203, 154, 0.32);
 
     --pink:            var(--accent);
     --pink-dim:        var(--accent-dim);
@@ -208,25 +206,25 @@
     --pink-bg:         var(--accent-bg);
     --pink-line:       var(--accent-line);
 
-    --crimson:         #D07060;
-    --crimson-bg:      rgba(208, 112, 96, 0.12);
+    --crimson:         #9E483F;
+    --crimson-bg:      rgba(158, 72, 63, 0.20);
 
     --loc:             var(--loc-color);
     --modal-bg:        var(--modal-overlay);
     --glass:           var(--accent-bg);
     --glass-border:    var(--accent-line);
 
-    --mac-glass:       rgba(28, 30, 44, 0.88);
-    --mac-border:      rgba(61, 64, 88, 0.80);
+    --mac-glass:       rgba(44, 23, 21, 0.90);
+    --mac-border:      rgba(94, 47, 43, 0.80);
 
     --primary-600:     var(--accent);
     --secondary-600:   var(--loc-color);
-    --accent-600:      rgba(240, 145, 107, 0.50);
-    --text-300:        rgba(245, 240, 230, 0.30);
-    --text-400:        rgba(245, 240, 230, 0.50);
-    --text-600:        rgba(245, 240, 230, 0.80);
+    --accent-600:      rgba(235, 166, 7, 0.50);
+    --text-300:        rgba(240, 213, 165, 0.30);
+    --text-400:        rgba(240, 213, 165, 0.50);
+    --text-600:        rgba(240, 213, 165, 0.80);
 
-    --canvas-deep:     #13141F;
+    --canvas-deep:     #221210;
     --border-gold:     var(--border-default);
     --bg-abyss:        var(--page-bg);
     --font-heading:    var(--font-title);
@@ -238,33 +236,33 @@
     :root:not([data-theme="light"]) {
       color-scheme: dark;
 
-      --page-bg:         #1D1E2C;
-      --card-bg:         #282A3D;
-      --card-bg-2:       #30334A;
-      --card-bg-3:       #393C54;
-      --text-primary:    #F5F0E6;
-      --text-secondary:  #B0BEE8;
-      --text-dim:        #7A88B8;
-      --text-xdim:       #4A5480;
-      --accent:          #F0916B;
-      --accent-hover:    #F8A882;
-      --accent-dim:      #B06040;
-      --accent-light:    #FFCDB8;
-      --accent-bg:       rgba(240, 145, 107, 0.12);
-      --accent-line:     rgba(240, 145, 107, 0.30);
-      --border-default:  #3D4058;
-      --border-strong:   #4D5070;
-      --border-accent:   #F0916B;
-      --loc-color:       #8ABDA0;
-      --tag-coral-bg:    #F0916B;
-      --tag-coral-text:  #1D1E2C;
-      --tag-sage-bg:     #B8D6B2;
-      --tag-sage-text:   #1D1E2C;
-      --tag-lavender-bg: #B0BEE8;
-      --tag-lavender-text:#1D1E2C;
-      --modal-overlay:   rgba(2, 2, 8, 0.85);
-      --glass-bg:        rgba(40, 42, 61, 0.85);
-      --glass-border-c:  rgba(61, 64, 88, 0.70);
+      --page-bg:         #2C1715;
+      --card-bg:         #3D1E1B;
+      --card-bg-2:       #4E2723;
+      --card-bg-3:       #9E483F;
+      --text-primary:    #EBA607;
+      --text-secondary:  #F0D5A5;
+      --text-dim:        #C7AE85;
+      --text-xdim:       #998463;
+      --accent:          #EBA607;
+      --accent-hover:    #FFBE1A;
+      --accent-dim:      #C28800;
+      --accent-light:    #FCE592;
+      --accent-bg:       rgba(235, 166, 7, 0.15);
+      --accent-line:     rgba(235, 166, 7, 0.35);
+      --border-default:  #5E2F2B;
+      --border-strong:   #7E3B36;
+      --border-accent:   #EBA607;
+      --loc-color:       #6ECB9A;
+      --tag-coral-bg:    #EBA607;
+      --tag-coral-text:  #2C1715;
+      --tag-sage-bg:     #4AA978;
+      --tag-sage-text:   #F0D5A5;
+      --tag-lavender-bg: #9E483F;
+      --tag-lavender-text:#F0D5A5;
+      --modal-overlay:   rgba(20, 10, 9, 0.88);
+      --glass-bg:        rgba(44, 23, 21, 0.88);
+      --glass-border-c:  rgba(94, 47, 43, 0.70);
       --canvas:          var(--page-bg);
       --surface:         var(--card-bg);
       --surface2:        var(--card-bg-2);
@@ -280,32 +278,32 @@
       --amber-light:     var(--accent-light);
       --amber-bg:        var(--accent-bg);
       --amber-line:      var(--accent-line);
-      --amber-glow:      rgba(240, 145, 107, 0.40);
+      --amber-glow:      rgba(235, 166, 7, 0.40);
       --cyan:            var(--loc-color);
-      --cyan-dim:        #5A8A70;
-      --cyan-light:      #C8E8D8;
-      --cyan-bg:         rgba(138, 189, 160, 0.12);
-      --cyan-line:       rgba(138, 189, 160, 0.28);
+      --cyan-dim:        #4AA978;
+      --cyan-light:      #A3E4C2;
+      --cyan-bg:         rgba(110, 203, 154, 0.15);
+      --cyan-line:       rgba(110, 203, 154, 0.32);
       --pink:            var(--accent);
       --pink-dim:        var(--accent-dim);
       --pink-light:      var(--accent-light);
       --pink-bg:         var(--accent-bg);
       --pink-line:       var(--accent-line);
-      --crimson:         #D07060;
-      --crimson-bg:      rgba(208, 112, 96, 0.12);
+      --crimson:         #9E483F;
+      --crimson-bg:      rgba(158, 72, 63, 0.20);
       --loc:             var(--loc-color);
       --modal-bg:        var(--modal-overlay);
       --glass:           var(--accent-bg);
       --glass-border:    var(--accent-line);
-      --mac-glass:       rgba(28, 30, 44, 0.88);
-      --mac-border:      rgba(61, 64, 88, 0.80);
+      --mac-glass:       rgba(44, 23, 21, 0.90);
+      --mac-border:      rgba(94, 47, 43, 0.80);
       --primary-600:     var(--accent);
       --secondary-600:   var(--loc-color);
-      --accent-600:      rgba(240, 145, 107, 0.50);
-      --text-300:        rgba(245, 240, 230, 0.30);
-      --text-400:        rgba(245, 240, 230, 0.50);
-      --text-600:        rgba(245, 240, 230, 0.80);
-      --canvas-deep:     #13141F;
+      --accent-600:      rgba(235, 166, 7, 0.50);
+      --text-300:        rgba(240, 213, 165, 0.30);
+      --text-400:        rgba(240, 213, 165, 0.50);
+      --text-600:        rgba(240, 213, 165, 0.80);
+      --canvas-deep:     #221210;
       --border-gold:     var(--border-default);
       --bg-abyss:        var(--page-bg);
       --font-heading:    var(--font-title);
@@ -1391,13 +1389,14 @@
   /* Giant Tamil watermark behind content */
   .intro-watermark {
     position: absolute;
-    right: -30px; top: 50%;
+    right: -60px; top: 50%;
     transform: translateY(-50%);
     font-family: var(--font-tamil);
-    font-size: 380px;
+    font-size: 340px;
     font-weight: 900;
     line-height: 1;
     color: var(--text-xdim);
+    opacity: 0.04;
     pointer-events: none;
     user-select: none;
     z-index: 0;

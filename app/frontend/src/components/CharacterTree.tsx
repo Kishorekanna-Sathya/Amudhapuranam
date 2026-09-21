@@ -57,7 +57,7 @@ const LAYOUT: Record<string, { x: number; y: number }> = {
 const HERO_R = 44;
 const NODE_R = 32;
 
-function getR(id: string) { return id === "amudhan" ? HERO_R : NODE_R; }
+function getR(id: string, selectedId: string) { return id === selectedId ? HERO_R : NODE_R; }
 
 // ── SVG connector path between two nodes ─────────────────────────────────
 function connectorPath(
@@ -132,14 +132,76 @@ export default function CharacterTree({
     return m;
   }, [characters]);
 
+  // ── Dynamic layout centered around selectedId ───────────────────────────
+  const layoutPositions = useMemo(() => {
+    const result: Record<string, { x: number; y: number }> = {};
+    const focusX = W / 2; // 480
+    const focusY = 110;
+
+    // 1. Focus node at focal center
+    result[selectedId] = { x: focusX, y: focusY };
+
+    // 2. Find direct 1st-degree neighbors connected to selectedId
+    const neighborsSet = new Set<string>();
+    relationships.forEach((rel) => {
+      if (rel.source === selectedId) neighborsSet.add(rel.target);
+      else if (rel.target === selectedId) neighborsSet.add(rel.source);
+    });
+    const neighbors = Array.from(neighborsSet);
+
+    // 3. Remaining characters
+    const remaining = characters
+      .map((c) => c.id)
+      .filter((id) => id !== selectedId && !neighborsSet.has(id));
+
+    // Position 1st-degree neighbors in a primary semi-circle arc below focus node
+    if (neighbors.length > 0) {
+      const r1 = 240;
+      const startAngle = Math.PI * 0.18;
+      const endAngle = Math.PI * 0.82;
+      neighbors.forEach((id, idx) => {
+        const angle = neighbors.length === 1
+          ? Math.PI / 2
+          : startAngle + (idx / (neighbors.length - 1)) * (endAngle - startAngle);
+        const x = focusX + r1 * Math.cos(angle);
+        const y = focusY + r1 * Math.sin(angle);
+        result[id] = { x: Math.round(x), y: Math.round(y) };
+      });
+    }
+
+    // Position remaining characters in a secondary arc below neighbors
+    if (remaining.length > 0) {
+      const r2 = 450;
+      const startAngle = Math.PI * 0.22;
+      const endAngle = Math.PI * 0.78;
+      remaining.forEach((id, idx) => {
+        const angle = remaining.length === 1
+          ? Math.PI / 2
+          : startAngle + (idx / (remaining.length - 1)) * (endAngle - startAngle);
+        const x = focusX + r2 * Math.cos(angle);
+        const y = focusY + r2 * Math.sin(angle);
+        result[id] = { x: Math.round(x), y: Math.round(y) };
+      });
+    }
+
+    // Fallback if any missing
+    characters.forEach((c) => {
+      if (!result[c.id]) {
+        result[c.id] = LAYOUT[c.id] || { x: 480, y: 400 };
+      }
+    });
+
+    return result;
+  }, [selectedId, characters, relationships, W]);
+
   const links = useMemo(() => {
     return relationships
       .map((rel) => {
         const src = nodeMap.get(rel.source);
         const tgt = nodeMap.get(rel.target);
         if (!src || !tgt) return null;
-        const srcPos = LAYOUT[rel.source];
-        const tgtPos = LAYOUT[rel.target];
+        const srcPos = layoutPositions[rel.source];
+        const tgtPos = layoutPositions[rel.target];
         if (!srcPos || !tgtPos) return null;
         return { ...rel, src, tgt, srcPos, tgtPos };
       })
@@ -148,7 +210,7 @@ export default function CharacterTree({
         srcPos: { x: number; y: number };
         tgtPos: { x: number; y: number };
       })[];
-  }, [relationships, nodeMap]);
+  }, [relationships, nodeMap, layoutPositions]);
 
   const selectedChar = nodeMap.get(selectedId) || characters[0];
   const selChapters = useMemo(() =>
@@ -189,7 +251,7 @@ export default function CharacterTree({
           <div className="ct-hud-brand">
             <GitBranch size={15} className="ct-hud-icon" />
             <span className="ct-hud-title">CHARACTER TREE</span>
-            <span className="ct-hud-badge">AMUDHAPURANAM</span>
+            <span className="ct-hud-badge">CENTER: {selectedChar.name.toUpperCase()}</span>
           </div>
           <div className="ct-filter-row">
             {filterTypes.map(({ key, label, color }) => (
@@ -203,6 +265,16 @@ export default function CharacterTree({
                 {label}
               </button>
             ))}
+            {selectedId !== "amudhan" && (
+              <button
+                className="ct-pill"
+                onClick={() => setSelectedId("amudhan")}
+                style={{ "--pc": "var(--accent)" } as React.CSSProperties}
+                title="Reset focal point to Amudhan"
+              >
+                ↺ Reset
+              </button>
+            )}
           </div>
         </div>
 
@@ -240,8 +312,8 @@ export default function CharacterTree({
             {links.map((l) => {
               const relType = (l.type || "").toLowerCase();
               const cfg = getRelConfig(relType);
-              const sr = getR(l.source);
-              const tr = getR(l.target);
+              const sr = getR(l.source, selectedId);
+              const tr = getR(l.target, selectedId);
               const isActive = !activeFilter || relType === activeFilter;
               const isHl = hoveredId
                 ? l.source === hoveredId || l.target === hoveredId
@@ -262,10 +334,11 @@ export default function CharacterTree({
                     strokeDasharray={cfg.dash}
                     strokeLinecap="round"
                     markerEnd={`url(#ct-arr-${markerKey})`}
+                    style={{ transition: "d 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.3s" }}
                   />
                   {/* Mid-point label — shown only on hover */}
                   {isHl && isActive && (
-                    <g transform={`translate(${mid.x}, ${mid.y})`}>
+                    <g transform={`translate(${mid.x}, ${mid.y})`} style={{ transition: "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)" }}>
                       <rect
                         x={-(l.label.length * 3.2 + 8)} y={-10}
                         width={l.label.length * 6.4 + 16} height={20}
@@ -288,10 +361,10 @@ export default function CharacterTree({
 
             {/* ── NODES ── */}
             {characters.map((char) => {
-              const pos = LAYOUT[char.id];
+              const pos = layoutPositions[char.id];
               if (!pos) return null;
-              const isHero = char.id === "amudhan";
-              const r = getR(char.id);
+              const isHero = char.id === selectedId;
+              const r = getR(char.id, selectedId);
               const isSelected = selectedId === char.id;
               const isHovered = hoveredId === char.id;
               const isConnected = connectedToHover.has(char.id);
@@ -303,14 +376,19 @@ export default function CharacterTree({
               return (
                 <g
                   key={char.id}
-                  style={{ cursor: "pointer", opacity: dim ? 0.15 : 1, transition: "opacity 0.28s" }}
+                  transform={`translate(${pos.x}, ${pos.y})`}
+                  style={{
+                    cursor: "pointer",
+                    opacity: dim ? 0.15 : 1,
+                    transition: "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s",
+                  }}
                   onMouseEnter={() => setHoveredId(char.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   onClick={() => { setSelectedId(char.id); setPanelOpen(true); }}
                 >
                   {/* Crisp selection ring — no blur */}
                   {(isSelected || isHovered) && (
-                    <circle cx={pos.x} cy={pos.y} r={r + 6} fill="none"
+                    <circle cx={0} cy={0} r={r + 6} fill="none"
                       stroke={char.color}
                       strokeWidth={isSelected ? 2 : 1.4}
                       strokeOpacity={isSelected ? 0.85 : 0.5}
@@ -318,14 +396,14 @@ export default function CharacterTree({
                     />
                   )}
                   {/* Main filled circle */}
-                  <circle cx={pos.x} cy={pos.y} r={r}
+                  <circle cx={0} cy={0} r={r}
                     fill="var(--card-bg)"
                     stroke={char.color}
                     strokeWidth={isHero ? 3 : 2.2}
                   />
                   {/* Initials */}
                   <text
-                    x={pos.x} y={pos.y}
+                    x={0} y={0}
                     textAnchor="middle" dominantBaseline="central"
                     fill={char.color}
                     fontSize={isHero ? 19 : 13}
@@ -337,7 +415,7 @@ export default function CharacterTree({
                   </text>
                   {/* Name */}
                   <text
-                    x={pos.x} y={pos.y + r + 15}
+                    x={0} y={r + 15}
                     textAnchor="middle"
                     fill="var(--text-primary)"
                     fontSize={isHero ? 12 : 11}
@@ -348,7 +426,7 @@ export default function CharacterTree({
                   </text>
                   {/* Sub-label */}
                   <text
-                    x={pos.x} y={pos.y + r + 27}
+                    x={0} y={r + 27}
                     textAnchor="middle"
                     fill="var(--text-secondary)"
                     fontSize="9"
